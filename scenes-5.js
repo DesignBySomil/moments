@@ -126,7 +126,7 @@
       const fw = u * 0.40, fh = u * 0.50, cy = u * 0.52;
       const dx = X, dy = Y - cy;
       if (Math.abs(dx) <= fw * 1.15 && Math.abs(dy) <= fh) {
-        let sx = dx / (fw * 2) + 0.5, sy = dy / (fh * 2) + 0.5;
+        let sx = 0.22 + (dx / (fw * 2) + 0.5) * 0.78, sy = 0.06 + (dy / (fh * 2) + 0.5) * 0.68;
         // sway: rotate sample around rope anchor near bake top-center
         const a = 0.05 * S(t, 1.1);
         const ax = 0.5, ay = 0.02;
