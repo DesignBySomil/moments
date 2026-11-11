@@ -59,11 +59,12 @@
   });
   window.addEventListener('hashchange', () => { const p = idx; fromHash(); if (idx !== p) { pendingIdx = idx; targetAlpha = 0; } });
 
-  let start = performance.now();
+  let start = performance.now(), lastNow = start;
   function frame(now) {
+    const dtF = Math.min(0.1, (now - lastNow) / 1000); lastNow = now;
     const time = STILL ? parseFloat(params.get('t')) * Engine.scene.loop : (now - start) / 1000;
-    // transition fade
-    alpha += (targetAlpha - alpha) * 0.12;
+    // transition fade (time-based: ~0.35s each way regardless of frame rate)
+    alpha += (targetAlpha - alpha) * Math.min(1, dtF * 18);
     if (targetAlpha === 0 && alpha < 0.02 && pendingIdx >= 0) {
       idx = pendingIdx; pendingIdx = -1;
       Engine.setScene(SCENES[idx]);
