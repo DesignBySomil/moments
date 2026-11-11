@@ -1,7 +1,7 @@
 /* moments - carousel shell: swipe / keys / hash routing, auto-hiding chrome */
 'use strict';
 (function () {
-  const SCENES = [...(window.ScenesA || []), ...(window.ScenesB || []), ...(window.ScenesB2 || []), ...(window.ScenesC || []), ...(window.ScenesD || [])];
+  const SCENES = window.ASCII_SCENES;
   const nameEl = document.getElementById('name');
   const countEl = document.getElementById('count');
   const hintEl = document.getElementById('hint');
@@ -45,10 +45,11 @@
   // swipe
   let sx = 0, sy = 0, st = 0, tracking = false;
   window.addEventListener('pointerdown', e => { sx = e.clientX; sy = e.clientY; st = performance.now(); tracking = true; showChrome(); });
+  window.addEventListener('pointercancel', () => { tracking = false; });
   window.addEventListener('pointerup', e => {
     if (!tracking) return; tracking = false;
     const dx = e.clientX - sx, dy = e.clientY - sy, dt = performance.now() - st;
-    if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.4 && dt < 800) {
+    if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.4) {
       goTo(idx + (dx < 0 ? 1 : -1));
     }
   });
