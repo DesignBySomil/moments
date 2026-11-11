@@ -1,31 +1,69 @@
-/* Direct character renderer. Every mark is a literal ASCII glyph. */
+/* Dense tonal character renderer. Every mark is a literal ASCII glyph drawn
+   from a prerendered atlas; scenes are animated tonal fields. */
 'use strict';
 const Engine = (() => {
   const canvas = document.getElementById('stage');
   const ctx = canvas.getContext('2d');
-  let scene, width, height, dpr;
+  const RAMP = ' .:-=+*x#%@';
+  let scene = null, W = 0, H = 0, dpr = 1, cols = 0, rows = 0, cw = 0, ch = 0;
+  let atlas = null, lastFrame = 0;
+
+  function buildAtlas() {
+    const fs = ch * 0.98 * dpr;
+    atlas = scene.inks.map(color => RAMP.split('').map(c => {
+      const cv = document.createElement('canvas');
+      cv.width = Math.max(2, Math.ceil(cw * dpr));
+      cv.height = Math.max(2, Math.ceil(ch * dpr));
+      const c2 = cv.getContext('2d');
+      c2.font = '700 ' + fs + 'px "Courier New", monospace';
+      c2.textAlign = 'center'; c2.textBaseline = 'middle';
+      c2.fillStyle = color;
+      c2.fillText(c, cv.width / 2, cv.height / 2 + fs * 0.02);
+      return cv;
+    }));
+  }
+
   function resize() {
-    width = innerWidth; height = innerHeight; dpr = Math.min(devicePixelRatio || 1, 2);
-    canvas.width = Math.round(width*dpr); canvas.height = Math.round(height*dpr);
+    W = innerWidth; H = innerHeight; dpr = Math.min(devicePixelRatio || 1, 1.5);
+    cols = Math.max(68, Math.min(178, Math.round(W / 8.2)));
+    cw = W / cols; ch = cw * 1.06; rows = Math.ceil(H / ch); ch = H / rows;
+    canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+    canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+    if (scene) buildAtlas();
   }
-  addEventListener('resize', resize); resize();
-  function render(time, alpha=1) {
-    ctx.setTransform(dpr,0,0,dpr,0,0); ctx.fillStyle='#08090b'; ctx.fillRect(0,0,width,height);
+  addEventListener('resize', resize);
+
+  function render(time, alpha = 1, force = false) {
     if (!scene) return;
-    const cw = Math.min((width-30)/36, (height-70)/72, 11.2), ch=cw*1.7;
-    const ox=(width-cw*48)/2, oy=(height-ch*48)/2;
-    const grid = Array.from({length:48},()=>Array(48).fill(null));
-    const g = {
-      put(x,y,s,color=scene.color,a=1) { x=Math.round(x); y=Math.round(y); if(y<0||y>=48)return; for(let i=0;i<s.length;i++) if(x+i>=0&&x+i<48&&s[i]!==' ') grid[y][x+i]={c:s[i],color,a}; },
-      art(x,y,rows,color=scene.color,a=1) { rows.forEach((s,i)=>this.put(x,y+i,s,color,a)); },
-      line(x0,y0,x1,y1,char='.',color=scene.color,a=1) {const n=Math.max(Math.abs(x1-x0),Math.abs(y1-y0));for(let i=0;i<=n;i++)this.put(x0+(x1-x0)*i/(n||1),y0+(y1-y0)*i/(n||1),char,color,a);},
-      ring(x,y,rx,ry,color=scene.color,a=1) {for(let i=0;i<80;i++){const z=i/80*Math.PI*2;this.put(x+Math.cos(z)*rx,y+Math.sin(z)*ry,Math.abs(Math.sin(z))>.7?'_':Math.cos(z)>0?')':'(',color,a);}},
-    };
-    const t=((time%scene.loop)+scene.loop)%scene.loop/scene.loop;
-    scene.draw(g,t);
-    ctx.font='700 '+(ch*.97)+'px "Courier New", monospace'; ctx.textBaseline='middle'; ctx.textAlign='center';
-    for(let y=0;y<48;y++)for(let x=0;x<48;x++){const q=grid[y][x]; if(q){ctx.globalAlpha=alpha*q.a;ctx.fillStyle=q.color;ctx.fillText(q.c,ox+(x+.5)*cw,oy+(y+.5)*ch);}}
-    ctx.globalAlpha=1;
+    if (!force && time - lastFrame < 1 / 32) return; // ~30fps cap, plenty for tonal motion
+    lastFrame = time;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = scene.bg; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const t = ((time % scene.loop) + scene.loop) % scene.loop / scene.loop;
+    const pw = cw * dpr, ph = ch * dpr;
+    ctx.globalAlpha = alpha;
+    for (let y = 0; y < rows; y++) {
+      for (let x = 0; x < cols; x++) {
+        const v = scene.f(x, y, t, cols, rows);
+        if (!v) continue;
+        let i, ink = 0, a = 1;
+        if (typeof v === 'number') i = v; else { i = v[0]; ink = v[1] || 0; a = v[2] == null ? 1 : v[2]; }
+        if (i <= 0.045) continue;
+        let lvl = (i * (RAMP.length - 1) + 0.5) | 0;
+        if (lvl < 1) lvl = 1; if (lvl >= RAMP.length) lvl = RAMP.length - 1;
+        if (a !== 1) ctx.globalAlpha = alpha * a;
+        ctx.drawImage(atlas[ink][lvl], (x * cw * dpr) | 0, (y * ch * dpr) | 0, pw, ph);
+        if (a !== 1) ctx.globalAlpha = alpha;
+      }
+    }
+    ctx.globalAlpha = 1;
   }
-  return {render,resize,setScene(s){scene=s;},get scene(){return scene;}};
+
+  resize();
+  return {
+    render, resize,
+    setScene(s) { scene = s; if (s) buildAtlas(); },
+    get scene() { return scene; },
+    get RAMP() { return RAMP; }
+  };
 })();
