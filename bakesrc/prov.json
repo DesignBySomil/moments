@@ -19,5 +19,19 @@
   "license": "by-sa",
   "license_url": "https://creativecommons.org/licenses/by-sa/2.0/",
   "page": "https://www.flickr.com/photos/28998097@N07/4215881289"
+ },
+ "jellyfish": {
+  "title": "Jellyfishes",
+  "creator": "chase_elliott",
+  "license": "by",
+  "license_url": "https://creativecommons.org/licenses/by/2.0/",
+  "page": "https://www.flickr.com/photos/19746950@N00/7387318456"
+ },
+ "lantern": {
+  "title": "Lanterns for mid-autumn festival",
+  "creator": "GeorgeTan#3 - OFF permanently",
+  "license": "pdm",
+  "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "page": "https://www.flickr.com/photos/190270151@N02/51498605534"
  }
 }
