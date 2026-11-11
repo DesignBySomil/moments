@@ -74,19 +74,12 @@ const Engine = (() => {
     W = Math.round(window.innerWidth * DPR);
     H = Math.round(window.innerHeight * DPR);
     canvas.width = W; canvas.height = H;
-    if (style === 'dots') {
-      BW = Math.max(40, Math.round(window.innerWidth / dotPitch));
-      BH = Math.max(40, Math.round(window.innerHeight / dotPitch));
-      buildJitter();
-    } else if (style === 'pixel') {
-      BW = pixelW;
-      BH = Math.max(60, Math.round(pixelW * window.innerHeight / window.innerWidth));
-    } else {
-      BW = Math.round(W * grainScale);
-      BH = Math.round(H * grainScale);
-    }
+    // ASCII glyph grid: one character per cell
+    const cellW = 7, cellH = 12;
+    BW = Math.max(24, Math.round(window.innerWidth / cellW));
+    BH = Math.max(24, Math.round(window.innerHeight / cellH));
     buf.width = BW; buf.height = BH;
-    buildVignette(style === 'grain' ? 0.42 : 0.5);
+    buildVignette(0.35);
   }
 
   window.addEventListener('resize', resize);
@@ -98,6 +91,39 @@ const Engine = (() => {
     let c = colorCache.get(key);
     if (!c) { c = 'rgb(' + r + ',' + g + ',' + b + ')'; colorCache.set(key, c); }
     return c;
+  }
+
+  // ---- ASCII glyph pass ----
+  // luminance ramp, light to dense
+  const RAMP = ' .\u00b7:-~=+*x#%@';
+  function passASCII(time) {
+    const img = bctx.getImageData(0, 0, BW, BH).data;
+    const cw = W / BW, ch = H / BH;
+    ctx.save();
+    ctx.font = '600 ' + Math.round(ch * 1.05) + 'px ui-monospace, Menlo, Consolas, monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const rl = RAMP.length - 1;
+    for (let y = 0; y < BH; y++) {
+      const row = y * BW;
+      const py = (y + 0.52) * ch;
+      for (let x = 0; x < BW; x++) {
+        const i = (row + x) * 4;
+        const r = img[i], g = img[i + 1], b = img[i + 2];
+        const lum = (r * 77 + g * 150 + b * 29) >> 8;
+        if (lum < 30) continue;
+        const gi = Math.min(rl, ((lum - 30) / 225 * rl + 0.5) | 0);
+        const glyph = RAMP[gi];
+        if (glyph === ' ') continue;
+        // brighten: glyph strokes are thinner than filled dots
+        const br = Math.min(255, r * 1.35 + 18) | 0;
+        const bg2 = Math.min(255, g * 1.35 + 18) | 0;
+        const bb = Math.min(255, b * 1.35 + 18) | 0;
+        ctx.fillStyle = dotColor(br, bg2, bb);
+        ctx.fillText(glyph, (x + 0.5) * cw, py);
+      }
+    }
+    ctx.restore();
   }
 
   function passDots(time) {
@@ -205,11 +231,10 @@ const Engine = (() => {
     bctx.fillRect(0, 0, BW, BH);
     currentScene.draw(bctx, BW, BH, t01, time);
 
-    if (style === 'dots') passDots(time);
-    else if (style === 'pixel') passPixel();
-    else passGrain(time);
+    passASCII(time);
 
-    grainAndVignette(time, style === 'grain' ? 0.10 : style === 'pixel' ? 0.05 : 0.07);
+    ctx.fillStyle = vignette;
+    ctx.fillRect(0, 0, W, H);
 
     if (sceneAlpha < 1) {
       ctx.fillStyle = 'rgba(5,5,7,' + (1 - sceneAlpha) + ')';
