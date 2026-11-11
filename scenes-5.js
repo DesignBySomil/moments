@@ -123,7 +123,7 @@
     const st = drift(X, Y, t, { scale: 0.5, thresh: 0.93, gain: 0.35, speed: 0.4, twinkle: 2 });
     if (st > 0) res = [st, 1];
     if (bk) {
-      const fw = u * 0.42, fh = u * 0.46, cy = u * 0.50;
+      const fw = u * 0.30, fh = u * 0.32, cy = u * 0.50;
       const dx = X, dy = Y - cy;
       if (Math.abs(dx) <= fw * 1.08 && Math.abs(dy) <= fh) {
         let sx = dx / (fw * 2) + 0.5, sy = dy / (fh * 2) + 0.5;
