@@ -26,7 +26,7 @@
     if (sx < 0 || sx > 1) return amb();
     const v0 = sampleBake(bk, sx * (bk.w - 1), sy * (bk.h - 1));
     const flame = sy < 0.52;
-    const v = clamp(v0 * 1.3 * (flame ? flick : 0.95 + 0.05 * S(t, 2)), 0, 1);
+    const v = clamp(v0 * (flame ? 1.35 * flick : 1.55 + 0.06 * S(t, 2)), 0, 1);
     if (v <= 0.02) return amb();
     return [v, flame ? 0 : 1];
   });
@@ -35,20 +35,20 @@
   add('campfire', '#120b06', ['#ffb04a', '#c9b8a8'], 9, (x, y, t, cols, rows) => {
     const bk = getBake('campfire');
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
-    const g = glow(sdC(X, Y, 0, u * 0.55, 0), u * 0.38) * 0.5;
+    const g = glow(sdC(X, Y, 0, u * 0.55, 0), u * 0.28) * 0.34;
     let res = g > 0.04 ? [g, 0] : 0;
     if (bk) {
       const flick = 0.90 + 0.10 * S(t, 5) + 0.08 * (vnoise(t * 11, 7.7) - 0.5);
       const wob = S(t, 3) * 0.006 + (vnoise(t * 7, 3.1) - 0.5) * 0.010;
-      const fw = u * 0.38, fh = u * 0.30, cy = u * 0.56;
+      const fw = u * 0.22, fh = u * 0.24, cy = u * 0.52;
       const dx = X, dy = Y - cy;
       if (Math.abs(dx) <= fw && Math.abs(dy) <= fh) {
         let sx = dx / (fw * 2) + 0.5 + wob * (1 - (dy / (fh * 2) + 0.5));
         const sy = dy / (fh * 2) + 0.5;
         if (sx >= 0 && sx <= 1) {
           const v0 = sampleBake(bk, sx * (bk.w - 1), sy * (bk.h - 1));
-          const v = clamp(v0 * flick, 0, 1);
-          if (v > 0.04) res = over(res, [v, 0]);
+          const v = clamp((v0 * flick - 0.06) * 1.25, 0, 1);
+          if (v > 0.05) res = over(res, [v, 0]);
         }
       }
     }

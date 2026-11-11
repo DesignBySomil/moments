@@ -48,7 +48,7 @@
 
   add('lighthouse', '#0e2438', ['#f2f6ff', '#8fb6d8'], 12, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
-    const lx = u * 0.10, lampY = u * 0.30, baseY = u * 0.72;
+    const lx = u * 0.10, lampY = u * 0.26, baseY = u * 0.68;
     let res = 0;
     const st = drift(X, Y, t, { scale: 0.5, thresh: 0.9, gain: 0.4, speed: 0.4 });
     if (st > 0) res = [st, 1];
@@ -68,7 +68,7 @@
     }
     if (Math.abs(rx) < u * 0.13 && Y > lampY - u * 0.1 && Y < baseY + u * 0.06) {
       const sdTower = (px, py) => {
-        const taper = u * 0.055 - (py - lampY) / (baseY - lampY) * u * 0.022;
+        const taper = u * 0.068 - (py - lampY) / (baseY - lampY) * u * 0.026;
         let d = sdBox(px, py, lx, (lampY + baseY) / 2 + u * 0.03, taper, (baseY - lampY) / 2);
         d = Math.min(d, sdBox(px, py, lx, lampY + u * 0.012, u * 0.075, u * 0.014));
         d = Math.min(d, sdBox(px, py, lx, lampY - u * 0.02, u * 0.032, u * 0.030));
@@ -85,7 +85,7 @@
       if (sdE(X, Y, lx, lampY - u * 0.018, u * 0.020, u * 0.020) < 0) res = over(res, [1, 0]);
     }
     if (Y > baseY - 2) {
-      const wv = waveField(X, Y, baseY + u * 0.01, t, { gain: 0.8, amp: u * 0.008, freq: 0.06, deep: u * 0.12 });
+      const wv = waveField(X, Y, baseY + u * 0.01, t, { gain: 0.5, amp: u * 0.008, freq: 0.06, deep: u * 0.12 });
       if (wv > 0) res = over(res, [wv, 1]);
     }
     return res;

@@ -123,13 +123,13 @@
     const st = drift(X, Y, t, { scale: 0.5, thresh: 0.93, gain: 0.35, speed: 0.4, twinkle: 2 });
     if (st > 0) res = [st, 1];
     if (bk) {
-      const fw = u * 0.40, fh = u * 0.50, cy = u * 0.52;
+      const fw = u * 0.42, fh = u * 0.46, cy = u * 0.50;
       const dx = X, dy = Y - cy;
-      if (Math.abs(dx) <= fw * 1.15 && Math.abs(dy) <= fh) {
-        let sx = 0.22 + (dx / (fw * 2) + 0.5) * 0.78, sy = 0.06 + (dy / (fh * 2) + 0.5) * 0.68;
-        // sway: rotate sample around rope anchor near bake top-center
-        const a = 0.05 * S(t, 1.1);
-        const ax = 0.5, ay = 0.02;
+      if (Math.abs(dx) <= fw * 1.08 && Math.abs(dy) <= fh) {
+        let sx = dx / (fw * 2) + 0.5, sy = dy / (fh * 2) + 0.5;
+        // sway: rotate sample around rope anchor (top of frame, where ropes leave)
+        const a = 0.04 * S(t, 1.1);
+        const ax = 0.77, ay = 0.0;
         const rx = sx - ax, ry = sy - ay;
         sx = ax + rx * Math.cos(a) + ry * Math.sin(a);
         sy = ay - rx * Math.sin(a) + ry * Math.cos(a);

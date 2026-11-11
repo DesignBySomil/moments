@@ -77,7 +77,7 @@
     let res = 0;
     const skyT = clamp(Y / hor, 0, 1);
     const band = fbm(X * 0.05, Y * 0.11 + 8, 3);
-    const skyV = (0.34 - skyT * 0.26) * (0.7 + 0.5 * band) * (0.5 + rise * 0.8);
+    const skyV = (0.28 - skyT * 0.22) * (0.7 + 0.5 * band) * (0.5 + rise * 0.8);
     if (skyV > 0.04 && Y < hor) res = [skyV, 1];
     const sd = sdC(X, Y, sx, sy, sr);
     if (Y < hor + 1) {
@@ -87,7 +87,7 @@
     if (Y >= hor) {
       const depth = ss(0, u * 0.2, Y - hor);
       const tex = fbm(X * 0.2 + t * 1.5, Y * 0.35, 3);
-      let v = 0.16 + 0.4 * depth + 0.2 * (tex - 0.5);
+      let v = 0.10 + 0.30 * depth + 0.16 * (tex - 0.5);
       const colW = u * 0.05 * (1 + depth * 2.5);
       const shim = vnoise(X * 1.6, Y * 0.4 - t * 5);
       if (Math.abs(X - sx) < colW && shim > 0.30) v = Math.max(v, (0.45 + 0.45 * ss(0.3, 0.75, shim)) * (1 - depth * 0.4));

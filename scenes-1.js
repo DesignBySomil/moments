@@ -108,9 +108,9 @@
       let d = sdBox(px, py, 0, -u * 0.22, u * 0.095, u * 0.125);
       for (let f = 0; f < 4; f++) {
         const fx = -u * 0.073 + f * u * 0.049, fl = u * (f === 1 || f === 2 ? 0.125 : 0.106);
-        d = Math.min(d, sdSeg(px, py, fx, -u * 0.33, fx + u * 0.009 * (f - 1.5), -u * 0.33 - fl) - u * 0.021);
+        d = Math.min(d, sdSeg(px, py, fx, -u * 0.33, fx + u * 0.009 * (f - 1.5), -u * 0.33 - fl) - u * 0.024);
       }
-      d = Math.min(d, sdSeg(px, py, -u * 0.095, -u * 0.17, -u * 0.170, -u * 0.26) - u * 0.022);
+      d = Math.min(d, sdSeg(px, py, -u * 0.095, -u * 0.17, -u * 0.170, -u * 0.26) - u * 0.025);
       d = Math.min(d, sdSeg(px, py, 0, -u * 0.095, 0, u * 0.07) - u * 0.062);
       d = Math.min(d, sdBox(px, py, 0, u * 0.115, u * 0.075, u * 0.045));
       return d;
@@ -119,7 +119,7 @@
     if (sh > 0) return [sh, 0];
     const ph = (t * 2) % 1, ringR = u * (0.26 + 0.13 * ph);
     const rd = Math.abs(sdC(LX, LY, -u * 0.02, -u * 0.24, ringR));
-    if (rd < u * 0.008) return [0.45 * (1 - ph), 1];
+    if (rd < u * 0.008) return [0.20 * (1 - ph), 1];
     return drift(X, Y, t, { gain: 0.16, thresh: 0.92 });
   });
 
@@ -129,12 +129,12 @@
     const gy = u * 0.68;
     let res = 0;
     if (Y > gy + u * 0.004) {
-      const dash = Y < gy + u * 0.035 ? (((X * 0.5 + t * 90) % 9 + 9) % 9 < 2.2 ? 0.32 : 0) : 0;
-      res = [0.26 + dash + 0.18 * (fbm(X * 0.9, Y * 0.9, 2) - 0.5), 1];
+      const dash = Y < gy + u * 0.035 ? (((X * 0.5 + t * 90) % 9 + 9) % 9 < 2.2 ? 0.22 : 0) : 0;
+      res = [0.15 + dash + 0.10 * (fbm(X * 0.9, Y * 0.9, 2) - 0.5), 1];
     }
     if (bk) {
       const bounce = S(t, 4) * u * 0.006;
-      const fw = u * 0.42, fh = u * 0.24, cyc = u * 0.52 + bounce;
+      const fw = u * 0.26, fh = u * 0.28, cyc = u * 0.50 + bounce;
       const dx = X, dy = Y - cyc;
       if (Math.abs(dx) <= fw && Math.abs(dy) <= fh) {
         const sx = dx / (fw * 2) + 0.5, sy = dy / (fh * 2) + 0.5;
