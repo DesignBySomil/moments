@@ -114,7 +114,7 @@
     }
     if (bk) {
       const pan = ((t * 0.06) % 0.5 - 0.25) * 2;
-      const fw = u * 0.50, fh = u * 0.36, cy = u * 0.50;
+      const fw = u * 0.50, fh = u * 0.29, cy = u * 0.50;
       const dx = X - pan * u * 0.30, dy = Y - cy;
       if (Math.abs(dx) <= fw && Math.abs(dy) <= fh) {
         const sx = dx / (fw * 2) + 0.5, sy = dy / (fh * 2) + 0.5;
