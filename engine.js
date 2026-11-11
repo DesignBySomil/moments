@@ -95,7 +95,7 @@ const Engine = (() => {
 
   // ---- ASCII glyph pass ----
   // luminance ramp, light to dense
-  const RAMP = ' .\u00b7:-~=+*x#%@';
+  const RAMP = ' .:~-=+*#%@';
   function passASCII(time) {
     const img = bctx.getImageData(0, 0, BW, BH).data;
     const cw = W / BW, ch = H / BH;
@@ -111,8 +111,8 @@ const Engine = (() => {
         const i = (row + x) * 4;
         const r = img[i], g = img[i + 1], b = img[i + 2];
         const lum = (r * 77 + g * 150 + b * 29) >> 8;
-        if (lum < 30) continue;
-        const gi = Math.min(rl, ((lum - 30) / 225 * rl + 0.5) | 0);
+        if (lum < 42) continue;
+        const gi = Math.min(rl, ((lum - 42) / 213 * rl + 0.5) | 0);
         const glyph = RAMP[gi];
         if (glyph === ' ') continue;
         // brighten: glyph strokes are thinner than filled dots
