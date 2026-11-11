@@ -7,11 +7,11 @@
   "page": "https://www.flickr.com/photos/33227787@N05/7869860560"
  },
  "butterfly": {
-  "title": "There's a Little Black Spot on the Sun Today \u266b \u266a",
-  "creator": "laszlo-photo",
-  "license": "by",
-  "license_url": "https://creativecommons.org/licenses/by/2.0/",
-  "page": "https://www.flickr.com/photos/40467171@N00/7343638466"
+  "title": "Monarchback_2019-08-11-12.38.41 ZS PMax UDR",
+  "creator": "Sam Droege",
+  "license": "pdm",
+  "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "page": "https://www.flickr.com/photos/54563451@N08/48555491036"
  },
  "candle": {
   "title": "Candle light silhouette",
@@ -27,11 +27,123 @@
   "license_url": "https://creativecommons.org/licenses/by/2.0/",
   "page": "https://www.flickr.com/photos/19746950@N00/7387318456"
  },
- "lantern": {
-  "title": "Lanterns for mid-autumn festival",
-  "creator": "GeorgeTan#3 - OFF permanently",
+ "lantern2": {
+  "title": "Lantern of hope",
+  "creator": "Shaheed539",
+  "license": "by-sa",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "page": "https://commons.wikimedia.org/w/index.php?curid=191748130"
+ },
+ "sail": {
+  "title": "Saint-Petersburg",
+  "creator": "Brett Jordan",
+  "license": "by",
+  "license_url": "https://creativecommons.org/licenses/by/2.0/",
+  "page": "https://www.flickr.com/photos/55497864@N00/7295744432"
+ },
+ "campfire": {
+  "title": "Wildfire",
+  "creator": "USFWS/Southeast",
   "license": "pdm",
   "license_url": "https://creativecommons.org/publicdomain/mark/1.0/",
-  "page": "https://www.flickr.com/photos/190270151@N02/51498605534"
+  "page": "https://www.flickr.com/photos/41464593@N02/4971832860"
+ },
+ "dandelion": {
+  "title": "Bokeh Dandelion",
+  "creator": "Bold Frontiers",
+  "license": "by",
+  "license_url": "https://creativecommons.org/licenses/by/2.0/",
+  "page": "https://www.flickr.com/photos/82955120@N05/13734221225"
+ },
+ "lighthouse": {
+  "title": "Evening, Barnegat Lighthouse",
+  "creator": "Tony Fischer Photography",
+  "license": "by",
+  "license_url": "https://creativecommons.org/licenses/by/2.0/",
+  "page": "https://www.flickr.com/photos/22714323@N06/4707900527"
+ },
+ "balloon": {
+  "title": "Balloon Fest Composite Just for fun",
+  "creator": "Harry Pherson",
+  "license": "by",
+  "license_url": "https://creativecommons.org/licenses/by/2.0/",
+  "page": "https://www.flickr.com/photos/32559259@N06/9743213598"
+ },
+ "kite": {
+  "title": "aldeburgh - kite video nr.2",
+  "creator": "uair01",
+  "license": "by",
+  "license_url": "https://creativecommons.org/licenses/by/2.0/",
+  "page": "https://www.flickr.com/photos/56759497@N00/6150885788"
+ },
+ "paperplane": {
+  "title": "On the Trail of the Hun - St. Mihiel Drive",
+  "creator": "Aylward, William James",
+  "license": "cc0",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "page": "https://n2t.net/ark:/65665/ng49ca746a2-7ea0-704b-e053-15f76fa0b4fa"
+ },
+ "train": {
+  "title": "reading shops",
+  "creator": "Slideshow Bruce",
+  "license": "by",
+  "license_url": "https://creativecommons.org/licenses/by/2.0/",
+  "page": "https://www.flickr.com/photos/19752067@N00/3756073393"
+ },
+ "windmill": {
+  "title": "Windmill in Sunset",
+  "creator": "Photomiqs",
+  "license": "by",
+  "license_url": "https://creativecommons.org/licenses/by/2.0/",
+  "page": "https://www.flickr.com/photos/61704052@N07/14470252847"
+ },
+ "umbrella": {
+  "title": "How to turn a kegger into a photo shoot",
+  "creator": "Larry Johnson",
+  "license": "by",
+  "license_url": "https://creativecommons.org/licenses/by/2.0/",
+  "page": "https://www.flickr.com/photos/76225887@N00/4556107215"
+ },
+ "pendulum": {
+  "title": "",
+  "creator": "Marcin Wichary",
+  "license": "by",
+  "license_url": "https://creativecommons.org/licenses/by/2.0/",
+  "page": "https://www.flickr.com/photos/8399025@N07/2829866152"
+ },
+ "swing": {
+  "title": "Swinging towards Breiviken",
+  "creator": "joiseyshowaa",
+  "license": "by-sa",
+  "license_url": "https://creativecommons.org/licenses/by-sa/2.0/",
+  "page": "https://www.flickr.com/photos/30201239@N00/28919454948"
+ },
+ "sprout": {
+  "title": "5.16.2010",
+  "creator": "essentielley",
+  "license": "by",
+  "license_url": "https://creativecommons.org/licenses/by/2.0/",
+  "page": "https://www.flickr.com/photos/99059891@N00/5878684361"
+ },
+ "leaves": {
+  "title": "Glen Artney Stream",
+  "creator": "Bold Frontiers",
+  "license": "by",
+  "license_url": "https://creativecommons.org/licenses/by/2.0/",
+  "page": "https://www.flickr.com/photos/82955120@N05/15195824473"
+ },
+ "moonsea": {
+  "title": "Stars over Sea",
+  "creator": "grayeme",
+  "license": "by",
+  "license_url": "https://creativecommons.org/licenses/by/2.0/",
+  "page": "https://www.flickr.com/photos/14534290@N04/6772936663"
+ },
+ "wave": {
+  "title": "Smoke Plume",
+  "creator": "wwarby",
+  "license": "by",
+  "license_url": "https://creativecommons.org/licenses/by/2.0/",
+  "page": "https://www.flickr.com/photos/26782864@N00/11774518245"
  }
 }
