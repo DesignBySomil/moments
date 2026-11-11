@@ -94,8 +94,8 @@
   add('lantern', '#191008', ['#ffca7a', '#a8763a'], 12, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     const sway = S(t, 1) * 0.10, lx = S(t, 1) * u * 0.03, ly = u * 0.42;
-    const g = glow(sdC(X, Y, lx, ly, 0), u * 0.34) * 0.5;
-    let res = g > 0.04 ? [g, 0, 0.9] : 0;
+    const g = glow(sdC(X, Y, lx, ly, 0), u * 0.155) * 0.36 * (0.6 + 0.8 * fbm(X * 0.3, Y * 0.3, 2));
+    let res = g > 0.16 ? [g, 0, 0.9] : 0;
     if (Math.abs(X - lx) < u * 0.3 && Math.abs(Y - ly) < u * 0.35) {
       const rx = u * 0.135, ry = u * 0.16;
       const sdLant = (px, py) => {

@@ -78,11 +78,11 @@
     const skyT = clamp(Y / hor, 0, 1);
     const band = fbm(X * 0.05, Y * 0.11 + 8, 3);
     const skyV = (0.28 - skyT * 0.22) * (0.7 + 0.5 * band) * (0.5 + rise * 0.8);
-    if (skyV > 0.04 && Y < hor) res = [skyV, 1];
+    if (skyV > 0.285 && Y < hor) res = [clamp(skyV, 0, 0.5), 1];
     const sd = sdC(X, Y, sx, sy, sr);
     if (Y < hor + 1) {
       if (sd < 0) res = over(res, [0.85 + 0.15 * clamp(-sd / (sr * 0.5), 0, 1), 0]);
-      else { const g = glow(sd, u * 0.10) * (0.35 + rise * 0.35); if (g > 0.05) res = over(res, [clamp(g, 0, 0.9), 0, 0.9]); }
+      else { const g = glow(sd, u * 0.10) * (0.26 + rise * 0.26) * (0.55 + 0.9 * fbm(X * 0.35, Y * 0.35 + 4, 2)); if (g > 0.18) res = over(res, [clamp(g, 0, 0.85), 0, 0.9]); }
     }
     if (Y >= hor) {
       const depth = ss(0, u * 0.2, Y - hor);
