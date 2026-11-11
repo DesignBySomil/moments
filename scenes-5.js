@@ -149,7 +149,7 @@
     let res = 0;
     if (bk) {
       const br = 1 + 0.02 * S(t, 0.9);
-      const fw = u * 0.34 * br, fh = u * 0.42 * br, cy = u * 0.54;
+      const fw = u * 0.36 * br, fh = u * 0.36 * br, cy = u * 0.52;
       const dx = X, dy = Y - cy;
       if (Math.abs(dx) <= fw && Math.abs(dy) <= fh) {
         const sx = dx / (fw * 2) + 0.5, sy = dy / (fh * 2) + 0.5;

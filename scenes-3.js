@@ -127,7 +127,7 @@
     if (cld > 0.04) res = [clamp(cld, 0, 1), 0];
     if (bk) {
       const drift2 = S(t, 0.4, 3) * u * 0.07, bob = S(t, 0.9) * u * 0.022;
-      const fw = u * 0.30, fh = u * 0.40, cy = u * 0.44 + bob;
+      const fw = u * 0.28, fh = u * 0.37, cy = u * 0.44 + bob;
       const dx = X - drift2, dy = Y - cy;
       if (Math.abs(dx) <= fw && Math.abs(dy) <= fh) {
         const sx = dx / (fw * 2) + 0.5, sy = dy / (fh * 2) + 0.5;
