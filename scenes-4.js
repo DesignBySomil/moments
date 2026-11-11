@@ -78,11 +78,11 @@
     const skyT = clamp(Y / hor, 0, 1);
     const band = fbm(X * 0.05, Y * 0.11 + 8, 3);
     const skyV = (0.28 - skyT * 0.22) * (0.7 + 0.5 * band) * (0.5 + rise * 0.8);
-    if (skyV > 0.285 && Y < hor) res = [clamp(skyV, 0, 0.5), 1];
+    if (skyV > 0.5 && Y < hor) res = [clamp(skyV, 0, 0.45), 1];
     const sd = sdC(X, Y, sx, sy, sr);
     if (Y < hor + 1) {
       if (sd < 0) res = over(res, [0.85 + 0.15 * clamp(-sd / (sr * 0.5), 0, 1), 0]);
-      else { const g = glow(sd, u * 0.10) * (0.26 + rise * 0.26) * (0.55 + 0.9 * fbm(X * 0.35, Y * 0.35 + 4, 2)); if (g > 0.18) res = over(res, [clamp(g, 0, 0.85), 0, 0.9]); }
+      else { const g = glow(sd, u * 0.055) * (0.4 + rise * 0.4) * (0.6 + 0.8 * fbm(X * 0.5, Y * 0.5 + 4, 2)); if (g > 0.16) res = over(res, [clamp(g, 0, 0.85), 0, 0.9]); }
     }
     if (Y >= hor) {
       const depth = ss(0, u * 0.2, Y - hor);
@@ -146,14 +146,19 @@
       };
       const sh = shade(sdMill, X, Y, -0.55, -0.8);
       if (sh > 0) res = over(res, [sh, 0]);
-      const rot = TAU * t;
+      const rot = TAU * t * 0.12;
       const sdBlades = (px, py) => {
         let d = 1e9;
         for (let k = 0; k < 4; k++) {
           const a = rot + k * TAU / 4;
           const dx = Math.cos(a), dy = Math.sin(a);
           const ex = tx + dx * bladeL, ey = hubY + dy * bladeL;
-          d = Math.min(d, sdSeg(px, py, tx, hubY, ex, ey) - (u * 0.006 + u * 0.016 * Math.abs(dy)));
+          const rx = px - tx, ry = py - hubY;
+          const proj = clamp((rx * dx + ry * dy) / bladeL, 0, 1);
+          const sailW = u * 0.004 + u * 0.026 * proj;
+          const lead = sdSeg(px, py, tx, hubY, ex, ey) - sailW;
+          const trailEdge = sdSeg(px, py, tx - dy * proj * u * 0.05, hubY + dx * proj * u * 0.05, ex - dy * u * 0.055, ey + dx * u * 0.055) - sailW * 0.9;
+          d = Math.min(d, Math.min(lead, trailEdge));
         }
         return d;
       };

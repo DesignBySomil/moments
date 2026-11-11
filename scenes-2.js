@@ -39,15 +39,15 @@
     if (bk) {
       const flick = 0.90 + 0.10 * S(t, 5) + 0.08 * (vnoise(t * 11, 7.7) - 0.5);
       const wob = S(t, 3) * 0.006 + (vnoise(t * 7, 3.1) - 0.5) * 0.010;
-      const fw = u * 0.25, fh = u * 0.27, cy = u * 0.52;
+      const fw = u * 0.29, fh = u * 0.31, cy = u * 0.52;
       const dx = X, dy = Y - cy;
       if (Math.abs(dx) <= fw && Math.abs(dy) <= fh) {
         let sx = dx / (fw * 2) + 0.5 + wob * (1 - (dy / (fh * 2) + 0.5));
         const sy = dy / (fh * 2) + 0.5;
         if (sx >= 0 && sx <= 1) {
           const v0 = sampleBake(bk, sx * (bk.w - 1), sy * (bk.h - 1));
-          const v = clamp((v0 * flick - 0.10) * 1.5, 0, 1);
-          if (v > 0.08) res = over(res, [v, 0]);
+          const v = clamp((v0 * flick - 0.16) * 1.9, 0, 1);
+          if (v > 0.14) res = over(res, [v, 0]);
         }
       }
     }
@@ -68,11 +68,12 @@
     const st = drift(X, Y, t, { scale: 0.5, thresh: 0.92, gain: 0.4, speed: 0.5, twinkle: 3 });
     if (st > 0) res = [st, 0];
     if (bk) {
-      const fw = u * 0.48, fh = u * 0.50, cy = u * 0.50;
+      const fw = u * 0.30, fh = u * 0.36, cy = u * 0.50;
       const dx = X, dy = Y - cy;
       if (Math.abs(dx) <= fw && Math.abs(dy) <= fh) {
         const sx = dx / (fw * 2) + 0.5, sy = dy / (fh * 2) + 0.5;
-        const eg = ss(0, 0.10, sx) * ss(1, 0.90, sx) * ss(0, 0.08, sy) * ss(1, 0.92, sy);
+        const qx = dx / fw, qy = dy / fh, rr = qx * qx + qy * qy;
+        const eg = clamp(1 - rr * rr, 0, 1);
         let v0 = sampleBake(bk, sx * (bk.w - 1), sy * (bk.h - 1)) * eg;
         // sea shimmer: animate lower half
         if (sy > 0.55) v0 *= 0.90 + 0.10 * vnoise(X * 1.2, Y * 0.4 - t * 3);
@@ -112,11 +113,12 @@
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     let res = 0;
     if (bk) {
-      const fw = u * 0.30, fh = u * 0.42, cy = u * 0.52;
+      const fw = u * 0.28, fh = u * 0.36, cy = u * 0.52;
       const dx = X, dy = Y - cy;
       if (Math.abs(dx) <= fw && Math.abs(dy) <= fh) {
         const sx = dx / (fw * 2) + 0.5, sy = dy / (fh * 2) + 0.5;
-        const eg = ss(0, 0.08, sx) * ss(1, 0.92, sx) * ss(0, 0.06, sy) * ss(1, 0.94, sy);
+        const qx = dx / fw, qy = dy / fh, rr = qx * qx + qy * qy;
+        const eg = clamp(1 - rr * rr, 0, 1);
         const v0 = sampleBake(bk, sx * (bk.w - 1), sy * (bk.h - 1)) * eg;
         if (v0 > 0.04) res = over(res, [clamp(v0 * 1.2, 0, 1), 0]);
       }

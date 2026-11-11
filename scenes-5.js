@@ -6,23 +6,24 @@
 
   add('pendulum', '#101018', ['#d8d4e8', '#8a86a0'], 8, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
-    const px0 = 0, py0 = u * 0.16, L = u * 0.52, ang = S(t, 1) * 0.42;
+    const px0 = 0, py0 = u * 0.14, L = u * 0.50, ang = S(t, 1) * 0.42;
     const bx = px0 + Math.sin(ang) * L, by = py0 + Math.cos(ang) * L;
     let res = 0;
-    const amb = drift(X, Y, t, { gain: 0.12, thresh: 0.92, speed: 0.8 });
-    if (amb > 0) res = [amb, 1];
     const trailA = Math.atan2(X - px0, Y - py0);
     const trailR = Math.hypot(X - px0, Y - py0);
     if (Math.abs(trailR - L) < u * 0.004 && Math.abs(trailA) < 0.45 && Y > py0) res = over(res, [0.22, 1]);
     if (Math.abs(X) < u * 0.30 && Y > py0 - u * 0.1 && Y < by + u * 0.12) {
+      const gbx = px0 + Math.sin(ang * 0.55) * L, gby = py0 + Math.cos(ang * 0.55) * L;
+      const dg = sdC(X, Y, gbx, gby, u * 0.068);
+      if (dg < 0) res = over(res, [0.22, 0]);
       const sdPend = (qx, qy) => Math.min(
-        sdSeg(qx, qy, px0, py0, bx, by) - u * 0.006,
-        sdC(qx, qy, bx, by, u * 0.052),
-        sdBox(qx, qy, px0, py0 - u * 0.012, u * 0.05, u * 0.012));
+        sdSeg(qx, qy, px0, py0, bx, by) - u * 0.013,
+        sdC(qx, qy, bx, by, u * 0.068),
+        sdBox(qx, qy, px0, py0 - u * 0.014, u * 0.06, u * 0.014));
       const sh = shade(sdPend, X, Y, -0.55, -0.8);
       if (sh > 0) res = over(res, [sh, 0]);
-      const glint = glow(sdC(X, Y, bx - u * 0.018, by - u * 0.018, u * 0.008), 1.2);
-      if (sdC(X, Y, bx, by, u * 0.052) < 0 && glint > 0.1) res = over(res, [clamp(0.5 + glint * 0.5, 0, 1), 0]);
+      const glint = glow(sdC(X, Y, bx - u * 0.024, by - u * 0.024, u * 0.010), 1.2);
+      if (sdC(X, Y, bx, by, u * 0.068) < 0 && glint > 0.1) res = over(res, [clamp(0.5 + glint * 0.5, 0, 1), 0]);
     }
     return res;
   });
@@ -149,11 +150,12 @@
     let res = 0;
     if (bk) {
       const br = 1 + 0.02 * S(t, 0.9);
-      const fw = u * 0.36 * br, fh = u * 0.36 * br, cy = u * 0.52;
+      const fw = u * 0.30 * br, fh = u * 0.32 * br, cy = u * 0.52;
       const dx = X, dy = Y - cy;
       if (Math.abs(dx) <= fw && Math.abs(dy) <= fh) {
         const sx = dx / (fw * 2) + 0.5, sy = dy / (fh * 2) + 0.5;
-        const eg = ss(0, 0.08, sx) * ss(1, 0.92, sx) * ss(0, 0.06, sy) * ss(1, 0.94, sy);
+        const qx = dx / fw, qy = dy / fh, rr = qx * qx + qy * qy;
+        const eg = clamp(1 - rr * rr, 0, 1);
         const v0 = sampleBake(bk, sx * (bk.w - 1), sy * (bk.h - 1)) * eg;
         if (v0 > 0.04) res = over(res, [clamp(v0 * 1.2, 0, 1), v0 > 0.6 ? 1 : 0]);
       }

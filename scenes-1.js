@@ -51,11 +51,11 @@
     }
     if (Y > rows * 0.30 && Y < rows * 0.70 && Math.abs(X - bx) < rows * 0.34) {
       const u = rows;
-      const sdHull = (px, py) => Math.max(sdE(px, py, bx, wl + u * 0.045, u * 0.160, u * 0.052), -(py - (wl + u * 0.015)));
+      const sdHull = (px, py) => Math.max(sdE(px, py, bx, wl + u * 0.052, u * 0.190, u * 0.062), -(py - (wl + u * 0.015)));
       const sdSails = (px, py) => Math.min(
-        sdTri(px, py, bx, wl - u * 0.27, bx, wl - u * 0.005, bx + u * 0.150, wl - u * 0.005),
-        sdTri(px, py, bx - u * 0.010, wl - u * 0.25, bx - u * 0.010, wl - u * 0.005, bx - u * 0.125, wl - u * 0.005),
-        sdSeg(px, py, bx, wl - u * 0.29, bx, wl) - u * 0.006);
+        sdTri(px, py, bx, wl - u * 0.335, bx, wl - u * 0.005, bx + u * 0.185, wl - u * 0.005),
+        sdTri(px, py, bx - u * 0.012, wl - u * 0.30, bx - u * 0.012, wl - u * 0.005, bx - u * 0.150, wl - u * 0.005),
+        sdSeg(px, py, bx, wl - u * 0.36, bx, wl) - u * 0.007);
       const dH = sdHull(X, Y), dSa = sdSails(X, Y), d = Math.min(dH, dSa);
       if (d < 1) {
         const sh = shade(dH < dSa ? sdHull : sdSails, X, Y, -0.6, -0.75);
@@ -64,9 +64,9 @@
       const rf = sdE(X, Y, bx, seaTop + (wl - seaTop) * 1.0 + u * 0.09, u * 0.15, u * 0.020);
       if (rf < 0) res = over(res, [0.25, 1]);
     }
-    const sunD = sdC(X, Y, cols * 0.17, rows * 0.17, rows * 0.055);
+    const sunD = sdC(X, Y, cols * 0.17, rows * 0.17, rows * 0.045);
     if (sunD < 0) res = over(res, [0.85, 0]);
-    else { const g = glow(sunD, rows * 0.035) * 0.35; if (g > 0.05) res = over(res, [g, 0, 0.8]); }
+    else { const g = glow(sunD, rows * 0.025) * 0.28; if (g > 0.08) res = over(res, [g, 0, 0.8]); }
     const cl = clouds(X, Y, t, 0.14, 0.60, 0.30);
     if (Y < rows * 0.45 && cl > 0) res = over(res, [cl, 1]);
     return res;
@@ -77,22 +77,23 @@
     let res = 0;
     const cl = clouds(X, Y, t, 0.15, 0.58, 0.32);
     if (cl > 0) res = [cl, 1];
-    for (let k = 0; k < 3; k++) {
-      const span = u * (k === 0 ? 0.13 : 0.06 + hash(k, 21) * 0.03);
-      const gx = (hash(k, 22) - 0.5) * u * 0.8 + S(t, 0.22, hash(k, 23) * 9) * u * 0.16;
-      const gy = u * (0.18 + hash(k, 24) * 0.22) + S(t, 0.8, hash(k, 25) * 9) * u * 0.012;
+    for (let k = 0; k < 6; k++) {
+      const span = u * (k === 0 ? 0.24 : k < 3 ? 0.10 + hash(k, 21) * 0.03 : 0.05 + hash(k, 21) * 0.02);
+      const gx = (k === 0 ? -u * 0.03 : (hash(k, 22) - 0.5) * u * 0.9) + S(t, 0.22, hash(k, 23) * 9) * u * (k === 0 ? 0.03 : 0.16);
+      const gy = (k === 0 ? u * 0.34 : u * (0.14 + hash(k, 24) * 0.26)) + S(t, 0.8, hash(k, 25) * 9) * u * 0.012;
+      const wthick = u * (k === 0 ? 0.016 : 0.009);
       if (Math.abs(X - gx) > span * 1.4 || Math.abs(Y - gy) > span * 0.9) continue;
       const flap = S(t, 2.6, hash(k, 26) * 9);
       const tipY = gy - flap * span * 0.55;
-      let d = sdSeg(X, Y, gx - span, tipY, gx, gy + span * 0.06) - u * 0.010;
-      d = Math.min(d, sdSeg(X, Y, gx, gy + span * 0.06, gx + span, tipY) - u * 0.010);
-      d = Math.min(d, sdE(X, Y, gx, gy + span * 0.03, u * 0.012, u * 0.007));
+      let d = sdSeg(X, Y, gx - span, tipY, gx, gy + span * 0.06) - wthick;
+      d = Math.min(d, sdSeg(X, Y, gx, gy + span * 0.06, gx + span, tipY) - wthick);
+      d = Math.min(d, sdE(X, Y, gx, gy + span * 0.03, span * 0.10, span * 0.06));
       const sh = shade((a, b) => {
-        let dd = sdSeg(a, b, gx - span, tipY, gx, gy + span * 0.06) - u * 0.006;
-        dd = Math.min(dd, sdSeg(a, b, gx, gy + span * 0.06, gx + span, tipY) - u * 0.006);
-        return Math.min(dd, sdE(a, b, gx, gy + span * 0.03, u * 0.012, u * 0.007));
+        let dd = sdSeg(a, b, gx - span, tipY, gx, gy + span * 0.06) - wthick * 0.6;
+        dd = Math.min(dd, sdSeg(a, b, gx, gy + span * 0.06, gx + span, tipY) - wthick * 0.6);
+        return Math.min(dd, sdE(a, b, gx, gy + span * 0.03, span * 0.10, span * 0.06));
       }, X, Y, -0.4, -0.8);
-      if (sh > 0.02) res = over(res, [clamp(sh * 1.35, 0, 1), 0]);
+      if (sh > 0.02) res = over(res, [clamp(sh * 1.35, 0, 1) * (k === 0 ? 1 : 0.55 + 0.3 * (k < 3)), 0]);
     }
     return res;
   });

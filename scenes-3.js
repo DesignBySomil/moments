@@ -193,7 +193,7 @@
 
   add('paperplane', '#27436b', ['#f0f4fa', '#8fa6c9'], 12, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
-    const px0 = S(t, 1) * u * 0.06, py0 = u * 0.40 + S(t, 2) * u * 0.04;
+    const px0 = S(t, 1) * u * 0.03, py0 = u * 0.40 + S(t, 2) * u * 0.04;
     const bank = S(t, 2, 0.25) * 0.12;
     let res = 0;
     for (let k = 0; k < 3; k++) {
@@ -202,14 +202,15 @@
     }
     const cb = Math.cos(bank), sb = Math.sin(bank);
     const LX = (X - px0) * cb - (Y - py0) * sb, LY = (X - px0) * sb + (Y - py0) * cb;
-    if (Math.abs(LX) < u * 0.32 && Math.abs(LY) < u * 0.20) {
-      const L = u * 0.23;
+    if (Math.abs(LX) < u * 0.30 && Math.abs(LY) < u * 0.22) {
+      const L = u * 0.255;
       const tri = (qx, qy, ax, ay, bx, by, cx, cy) => {
         const e = (x0, y0, x1, y1) => (qx - x0) * (y1 - y0) - (qy - y0) * (x1 - x0);
-        return Math.max(e(ax, ay, bx, by), e(bx, by, cx, cy), e(cx, cy, ax, ay)) / (u * 0.24);
+        const l = (x0, y0, x1, y1) => Math.hypot(x1 - x0, y1 - y0);
+        return -Math.min(e(ax, ay, bx, by) / l(ax, ay, bx, by), e(bx, by, cx, cy) / l(bx, by, cx, cy), e(cx, cy, ax, ay) / l(cx, cy, ax, ay));
       };
-      const sdUpper = (qx, qy) => tri(qx, qy, L, 0, -L, -L * 0.10, -L * 0.25, -L * 0.52);
-      const sdLower = (qx, qy) => tri(qx, qy, L, 0, -L, -L * 0.10, -L * 0.18, L * 0.42);
+      const sdUpper = (qx, qy) => tri(qx, qy, L, 0, -L, -L * 0.52, -L * 0.42, 0);
+      const sdLower = (qx, qy) => tri(qx, qy, L, 0, -L * 0.42, 0, -L, L * 0.38);
       const dU = sdUpper(LX, LY), dL = sdLower(LX, LY);
       if (dU < 0.8 || dL < 0.8) {
         const shU = shade(sdUpper, LX, LY, -0.45, -0.85) * 1.35;
