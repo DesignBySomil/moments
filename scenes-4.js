@@ -2,7 +2,7 @@
 'use strict';
 (function (root) {
   const H = root.__H, add = root.__addScene;
-  const { TAU, clamp, lerp, ss, S, B, vnoise, fbm, sdC, sdE, sdBox, sdSeg, shade, glow, over, drift, hash } = H;
+  const { TAU, clamp, lerp, ss, S, B, vnoise, fbm, sdC, sdE, sdBox, sdSeg, shade, glow, over, drift, hash, getBake, sampleBake } = H;
   const tri = (qx, qy, ax, ay, bx, by, cx, cy, nrm) => {
     const e = (x0, y0, x1, y1) => (qx - x0) * (y1 - y0) - (qy - y0) * (x1 - x0);
     return Math.max(e(ax, ay, bx, by), e(bx, by, cx, cy), e(cx, cy, ax, ay)) / nrm;
@@ -28,52 +28,22 @@
   });
 
   add('jellyfish', '#06182e', ['#a8e0ff', '#e8f6ff'], 12, (x, y, t, cols, rows) => {
+    const bk = getBake('jellyfish');
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
-    const pulse = B(t, 2), jx = S(t, 1) * u * 0.04, jy = u * 0.32 + S(t, 2, 0.2) * u * 0.02;
     let res = 0;
     const parts = drift(X, Y, t, { scale: 0.5, thresh: 0.88, gain: 0.35, speed: 1.5, windY: -2 });
     if (parts > 0) res = [parts, 0];
-    if (Math.abs(X - jx) < u * 0.34 && Y > jy - u * 0.22 && Y < u * 0.95) {
-      const brx = u * (0.16 + pulse * 0.018), bry = u * (0.145 - pulse * 0.012);
-      const sdBell = (px, py) => Math.max(sdE(px, py, jx, jy, brx, bry), (py - jy) / 2);
-      const dB = sdBell(X, Y);
-      if (dB < 1) {
-        const sh = shade(sdBell, X, Y, -0.55, -0.7);
-        if (sh > 0) {
-          const ribA = Math.atan2(Y - jy, (X - jx) * (bry / brx));
-          const rib = 0.80 + 0.20 * Math.abs(Math.sin(ribA * 6));
-          res = over(res, [clamp(sh * rib * 1.15, 0, 1), 1]);
-        }
+    if (bk) {
+      const bob = S(t, 2, 0.2) * u * 0.015;
+      const pulse = 1 + 0.022 * B(t, 2);
+      const fw = u * 0.26 * pulse, fh = u * 0.40 * pulse;
+      const cxc = S(t, 1) * u * 0.03, cyc = u * 0.52 + bob;
+      const dx = X - cxc, dy = Y - cyc;
+      if (Math.abs(dx) <= fw && Math.abs(dy) <= fh) {
+        const sx = dx / (fw * 2) + 0.5, sy = dy / (fh * 2) + 0.5;
+        const v0 = sampleBake(bk, sx * (bk.w - 1), sy * (bk.h - 1));
+        if (v0 > 0.03) res = over(res, [clamp(v0, 0, 1), sy < 0.34 ? 1 : 0]);
       }
-      const sdArms = (px, py) => {
-        let d = 1e9;
-        for (let k = 0; k < 4; k++) {
-          const ax = jx - brx * 0.55 + k * brx * 0.36;
-          let x0 = ax, y0 = jy + bry * 0.15;
-          for (let s = 0; s < 4; s++) {
-            const x1 = ax + S(t, 2, k * 0.6 + s * 0.35) * u * 0.02 * (s + 1) * 0.5, y1 = y0 + u * 0.030;
-            d = Math.min(d, sdSeg(px, py, x0, y0, x1, y1) - u * 0.008);
-            x0 = x1; y0 = y1;
-          }
-        }
-        for (let k = 0; k < 5; k++) {
-          const ax = jx - brx * 0.85 + k * brx * 0.42;
-          let x0 = ax, y0 = jy + bry * 0.1;
-          for (let s = 0; s < 6; s++) {
-            const x1 = ax + S(t, 1.6, k * 0.9 + s * 0.3) * u * 0.028 * (s + 1) * 0.45, y1 = y0 + u * 0.042;
-            d = Math.min(d, sdSeg(px, py, x0, y0, x1, y1) - u * 0.0032);
-            x0 = x1; y0 = y1;
-          }
-        }
-        return d;
-      };
-      const dA = sdArms(X, Y);
-      if (dA < 0.8) {
-        const sh = shade(sdArms, X, Y, -0.5, -0.7);
-        if (sh > 0) res = over(res, [sh * 0.85, 0]);
-      }
-      const g = glow(dB, u * 0.05) * 0.25;
-      if (dB > 0 && g > 0.05) res = over(res, [g, 1, 0.7]);
     }
     return res;
   });
@@ -234,4 +204,5 @@
     }
     return res;
   });
+
 })(typeof window !== 'undefined' ? window : globalThis);

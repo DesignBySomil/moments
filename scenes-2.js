@@ -2,7 +2,7 @@
 'use strict';
 (function (root) {
   const H = root.__H, add = root.__addScene;
-  const { TAU, clamp, lerp, ss, S, B, vnoise, fbm, sdC, sdE, sdBox, sdSeg, sdVesica, shade, glow, over, drift, waveField, hash } = H;
+  const { TAU, clamp, lerp, ss, S, B, vnoise, fbm, sdC, sdE, sdBox, sdSeg, sdVesica, shade, glow, over, drift, waveField, hash, getBake, sampleBake } = H;
   const flame = (px, py, fx, fy, w, hgt, t, seed) => {
     const wob = S(t, 3, seed) * w * 0.22 + (vnoise(t * 9 + seed, seed * 3) - 0.5) * w * 0.3;
     const bul = sdE(px, py, fx + wob * 0.3, fy - hgt * 0.22, w * (0.62 + 0.10 * S(t, 4, seed)), hgt * 0.30);
@@ -11,27 +11,26 @@
   };
 
   add('candle', '#160d08', ['#ffc46b', '#9a7852'], 10, (x, y, t, cols, rows) => {
+    const bk = getBake('candle');
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
-    const fx = 0, fy = u * 0.42 + S(t, 3) * u * 0.003;
-    const g = glow(sdC(X, Y, fx, fy - u * 0.05, 0), u * 0.34) * 0.55;
-    let res = g > 0.04 ? [g, 0] : 0;
-    if (Y > u * 0.40 && Y < u * 0.95 && Math.abs(X) < u * 0.16) {
-      const sdCandle = (px, py) => Math.min(
-        sdBox(px, py, 0, u * 0.68, u * 0.075, u * 0.20),
-        sdE(px, py, 0, u * 0.48, u * 0.075, u * 0.018),
-        sdE(px - u * 0.05, py - u * 0.53, 0, 0, u * 0.022, u * 0.035));
-      const sh = shade(sdCandle, X, Y, -0.3, -0.9);
-      if (sh > 0) res = over(res, [sh * (0.55 + 0.45 * clamp(g * 2, 0, 1)), 1]);
-      const wick = sdSeg(X, Y, 0, u * 0.475, 0, fy + u * 0.012) - u * 0.004;
-      if (wick < 0) res = over(res, [0.3, 1]);
-    }
-    const df = flame(X, Y, fx, fy, u * 0.045, u * 0.11, t, 0.3);
-    if (df < 0.8) {
-      const v = ss(0.5, -1.2, df);
-      if (v > 0) res = over(res, [clamp(v * 1.15, 0, 1), 0]);
-    }
-    return res;
+    const amb = () => { const a = drift(X, Y, t, { gain: 0.10, thresh: 0.95, speed: 1.6 }); return a ? [a, 0, 0.5] : 0; };
+    if (!bk) return amb();
+    // flame flicker: lateral wobble weighted to the flame (upper bake), brightness breathing
+    const wob = S(t, 3) * 0.008 + (vnoise(t * 7, 3.1) - 0.5) * 0.012;
+    const flick = 0.90 + 0.10 * S(t, 5) + 0.06 * (vnoise(t * 11, 7.7) - 0.5);
+    const fw = u * 0.34, fh = u * 0.46, cyc = u * 0.50;
+    const dx = X, dy = Y - cyc;
+    if (Math.abs(dx) > fw || Math.abs(dy) > fh) return amb();
+    let sx = dx / (fw * 2) + 0.5 + wob * (1 - 2 * (dy / (fh * 2) + 0.5)) * -2.0;
+    const sy = dy / (fh * 2) + 0.5;
+    if (sx < 0 || sx > 1) return amb();
+    const v0 = sampleBake(bk, sx * (bk.w - 1), sy * (bk.h - 1));
+    const flame = sy < 0.52;
+    const v = clamp(v0 * (flame ? flick : 0.95 + 0.05 * S(t, 2)), 0, 1);
+    if (v <= 0.02) return amb();
+    return [v, flame ? 0 : 1];
   });
+
 
   add('campfire', '#120b06', ['#ffb04a', '#c9b8a8'], 9, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
