@@ -125,8 +125,8 @@
     let res = 0;
     const cl = fbm(X * 0.10 + t * 1.2, Y * 0.20, 4);
     if (cl > 0.56 && Y > u * 0.5) res = [ss(0.56, 0.80, cl) * 0.5, 0];
-    if (Math.abs(X - bx) < u * 0.34 && Math.abs(Y - by) < u * 0.40) {
-      const rx = u * 0.16, ry = u * 0.185;
+    if (Math.abs(X - bx) < u * 0.40 && Math.abs(Y - by) < u * 0.46) {
+      const rx = u * 0.195, ry = u * 0.225;
       const sdBal = (px, py) => {
         let d = sdE(px, py, bx, by, rx, ry);
         d = Math.min(d, sdBox(px, py, bx, by + ry + u * 0.065, u * 0.038, u * 0.026));
@@ -155,7 +155,7 @@
     let res = 0;
     const cl = fbm(X * 0.12 + t * 1.4, Y * 0.22, 4);
     if (cl > 0.58) res = [ss(0.58, 0.82, cl) * 0.35, 0];
-    const kw = u * 0.10, kh = u * 0.14;
+    const kw = u * 0.125, kh = u * 0.175;
     if (Math.abs(X - kx) < u * 0.5 && Y > ky - u * 0.2 && Y < u * 0.95) {
       const sdKite = (px, py) => {
         const dx = Math.abs(px - kx), dy = Math.abs(py - ky);
