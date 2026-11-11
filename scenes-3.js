@@ -120,19 +120,30 @@
   });
 
   add('balloon', '#2f6bd6', ['#ffd9c9', '#e85a4a'], 16, (x, y, t, cols, rows) => {
-    const bk = getBake('balloon');
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
+    const bx = S(t, 1) * u * 0.05, by = u * 0.34 + S(t, 2, 0.3) * u * 0.012;
     let res = 0;
-    const cld = ss(0.62, 0.9, fbm(X * 0.14 + t * 0.3, Y * 0.35, 3)) * ss(u * 0.05, u * 0.2, Y) * ss(u * 0.9, u * 0.5, Y) * 0.4;
-    if (cld > 0.04) res = [clamp(cld, 0, 1), 0];
-    if (bk) {
-      const drift2 = S(t, 0.4, 3) * u * 0.07, bob = S(t, 0.9) * u * 0.022;
-      const fw = u * 0.28, fh = u * 0.37, cy = u * 0.44 + bob;
-      const dx = X - drift2, dy = Y - cy;
-      if (Math.abs(dx) <= fw && Math.abs(dy) <= fh) {
-        const sx = dx / (fw * 2) + 0.5, sy = dy / (fh * 2) + 0.5;
-        const v0 = sampleBake(bk, sx * (bk.w - 1), sy * (bk.h - 1));
-        if (v0 > 0.04) res = over(res, [clamp(v0 * 1.2, 0, 1), 1]);
+    const cl = fbm(X * 0.10 + t * 1.2, Y * 0.20, 4);
+    if (cl > 0.56 && Y > u * 0.5) res = [ss(0.56, 0.80, cl) * 0.5, 0];
+    if (Math.abs(X - bx) < u * 0.34 && Math.abs(Y - by) < u * 0.40) {
+      const rx = u * 0.16, ry = u * 0.185;
+      const sdBal = (px, py) => {
+        let d = sdE(px, py, bx, by, rx, ry);
+        d = Math.min(d, sdBox(px, py, bx, by + ry + u * 0.065, u * 0.038, u * 0.026));
+        d = Math.min(d, sdSeg(px, py, bx - rx * 0.55, by + ry * 0.75, bx - u * 0.030, by + ry + u * 0.045) - u * 0.004);
+        d = Math.min(d, sdSeg(px, py, bx + rx * 0.55, by + ry * 0.75, bx + u * 0.030, by + ry + u * 0.045) - u * 0.004);
+        return d;
+      };
+      const dE = sdE(X, Y, bx, by, rx, ry);
+      const sh = shade(sdBal, X, Y, -0.55, -0.75);
+      if (sh > 0) {
+        let ink = 0, boost = 1;
+        if (dE < 0) {
+          const bandA = Math.atan2(Y - by, (X - bx) * (ry / rx) * 1.0);
+          ink = Math.sin(bandA * 4 + TAU * 0) > 0 ? 1 : 0;
+          boost = 0.95;
+        }
+        res = over(res, [clamp(sh * boost, 0, 1), ink]);
       }
     }
     return res;
