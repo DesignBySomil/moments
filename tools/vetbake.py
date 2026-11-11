@@ -2,7 +2,9 @@
 import sys, re
 from PIL import Image, ImageDraw, ImageFont
 sid, out = sys.argv[1], sys.argv[2]
-src = open(f'scenes-bake-{sid}.js').read()
+import os
+p = f'scenes-cand-{sid}.js'
+src = open(p if os.path.exists(p) else f'scenes-bake-{sid}.js').read()
 m = re.search(r'w:\s*(\d+),\s*h:\s*(\d+),\s*d:\s*"([0-9a-f]+)"', src)
 w, h, d = int(m.group(1)), int(m.group(2)), m.group(3)
 RAMP = ' .:-=+*x#%@'
