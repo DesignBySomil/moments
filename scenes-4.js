@@ -110,7 +110,7 @@
     const gy = u * 0.72;
     if (Y > gy) {
       const tex = fbm(X * 0.7, Y * 0.7, 2);
-      res = [0.22 + 0.14 * (tex - 0.5), 1];
+      res = [0.10 + 0.08 * (tex - 0.5), 1];
     }
     if (bk) {
       const pan = ((t * 0.06) % 0.5 - 0.25) * 2;

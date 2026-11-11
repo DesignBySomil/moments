@@ -2,7 +2,7 @@
 'use strict';
 (function (root) {
   const H = root.__H, add = root.__addScene;
-  const { TAU, clamp, lerp, ss, S, B, vnoise, fbm, sdC, sdE, sdBox, sdSeg, shade, glow, over, drift, waveField, getBake, sampleBake } = H;
+  const { TAU, clamp, lerp, ss, S, B, vnoise, fbm, sdC, sdE, sdBox, sdSeg, shade, glow, over, drift, waveField, getBake, sampleBake, hash } = H;
   const sdTri = (X, Y, ax, ay, bx, by, cx, cy) => {
     const e = (x0, y0, x1, y1) => (X - x0) * (y1 - y0) - (Y - y0) * (x1 - x0);
     return Math.max(e(ax, ay, bx, by), e(bx, by, cx, cy), e(cx, cy, ax, ay)) / Math.max(Math.hypot(bx - ax, by - ay), Math.hypot(cx - bx, cy - by), Math.hypot(ax - cx, ay - cy)) * 2.2;
@@ -73,21 +73,26 @@
   });
 
   add('bird', '#6f7be8', ['#ffffff', '#454fb0'], 12, (x, y, t, cols, rows) => {
-    const bk = getBake('bird');
-    const X = (x - cols / 2) / 1.06, Y = y;
+    const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     let res = 0;
     const cl = clouds(X, Y, t, 0.15, 0.58, 0.32);
     if (cl > 0) res = [cl, 1];
-    if (bk) {
-      const u = rows;
-      const pan = S(t, 0.35, 2) * u * 0.10, bob = S(t, 1.6) * u * 0.018;
-      const fw = u * 0.34, fh = u * 0.20, cy = u * 0.34 + bob;
-      const dx = X - pan, dy = Y - cy;
-      if (Math.abs(dx) <= fw && Math.abs(dy) <= fh) {
-        const sx = dx / (fw * 2) + 0.5, sy = dy / (fh * 2) + 0.5;
-        const v0 = sampleBake(bk, sx * (bk.w - 1), sy * (bk.h - 1));
-        if (v0 > 0.04) res = over(res, [clamp(v0 * 1.15, 0, 1), 0]);
-      }
+    for (let k = 0; k < 3; k++) {
+      const span = u * (k === 0 ? 0.13 : 0.06 + hash(k, 21) * 0.03);
+      const gx = (hash(k, 22) - 0.5) * u * 0.8 + S(t, 0.22, hash(k, 23) * 9) * u * 0.16;
+      const gy = u * (0.18 + hash(k, 24) * 0.22) + S(t, 0.8, hash(k, 25) * 9) * u * 0.012;
+      if (Math.abs(X - gx) > span * 1.4 || Math.abs(Y - gy) > span * 0.9) continue;
+      const flap = S(t, 2.6, hash(k, 26) * 9);
+      const tipY = gy - flap * span * 0.55;
+      let d = sdSeg(X, Y, gx - span, tipY, gx, gy + span * 0.06) - u * 0.010;
+      d = Math.min(d, sdSeg(X, Y, gx, gy + span * 0.06, gx + span, tipY) - u * 0.010);
+      d = Math.min(d, sdE(X, Y, gx, gy + span * 0.03, u * 0.012, u * 0.007));
+      const sh = shade((a, b) => {
+        let dd = sdSeg(a, b, gx - span, tipY, gx, gy + span * 0.06) - u * 0.006;
+        dd = Math.min(dd, sdSeg(a, b, gx, gy + span * 0.06, gx + span, tipY) - u * 0.006);
+        return Math.min(dd, sdE(a, b, gx, gy + span * 0.03, u * 0.012, u * 0.007));
+      }, X, Y, -0.4, -0.8);
+      if (sh > 0.02) res = over(res, [clamp(sh * 1.35, 0, 1), 0]);
     }
     return res;
   });

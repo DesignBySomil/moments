@@ -52,16 +52,16 @@
     let res = 0;
     const st = drift(X, Y, t, { scale: 0.5, thresh: 0.9, gain: 0.4, speed: 0.4 });
     if (st > 0) res = [st, 1];
-    const beamA = TAU * t;
+    const beamA = TAU * t * 0.25;
     const bdx = Math.cos(beamA), bdy = Math.sin(beamA) * 0.35 - 0.06;
     const rx = X - lx, ry = Y - lampY;
     const rdist = Math.hypot(rx, ry);
-    if (rdist > u * 0.04 && Y < u * 0.62) {
+    if (rdist > u * 0.04 && Y < u * 0.70) {
       const dot = (rx * bdx + ry * bdy) / rdist;
       for (const sgn of [1, -0.35]) {
         const dd = sgn > 0 ? dot : -dot;
-        if (dd > 0.962) {
-          const v = ss(0.962, 0.999, dd) * glow(rdist, u * 0.30) * (sgn > 0 ? 1.0 : 0.30);
+        if (dd > 0.90) {
+          const v = ss(0.90, 0.995, dd) * glow(rdist, u * 0.30) * (sgn > 0 ? 1.0 : 0.35);
           if (v > 0.04) res = over(res, [clamp(v * 1.4, 0, 1), 0, 0.92]);
         }
       }
