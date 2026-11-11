@@ -33,20 +33,23 @@
 
 
   add('campfire', '#120b06', ['#ffb04a', '#c9b8a8'], 9, (x, y, t, cols, rows) => {
+    const bk = getBake('campfire');
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     const g = glow(sdC(X, Y, 0, u * 0.55, 0), u * 0.38) * 0.5;
     let res = g > 0.04 ? [g, 0] : 0;
-    if (Y > u * 0.30 && Y < u * 0.85 && Math.abs(X) < u * 0.34) {
-      const sdLogs = (px, py) => Math.min(
-        sdSeg(px, py, -u * 0.16, u * 0.72, u * 0.16, u * 0.62) - u * 0.028,
-        sdSeg(px, py, -u * 0.15, u * 0.61, u * 0.17, u * 0.71) - u * 0.028);
-      const sh = shade(sdLogs, X, Y, -0.4, -0.85);
-      if (sh > 0) res = over(res, [sh * 0.9, 1]);
-      for (let L = 0; L < 3; L++) {
-        const w = u * (0.16 - L * 0.045), hgt = u * (0.30 - L * 0.07);
-        const df = flame(X, Y, 0, u * 0.62, w, hgt, t, L * 1.7);
-        const v = ss(0.4, -1.4, df) * (0.55 + L * 0.24);
-        if (v > 0.03) res = over(res, [clamp(v, 0, 1), 0]);
+    if (bk) {
+      const flick = 0.90 + 0.10 * S(t, 5) + 0.08 * (vnoise(t * 11, 7.7) - 0.5);
+      const wob = S(t, 3) * 0.006 + (vnoise(t * 7, 3.1) - 0.5) * 0.010;
+      const fw = u * 0.38, fh = u * 0.30, cy = u * 0.56;
+      const dx = X, dy = Y - cy;
+      if (Math.abs(dx) <= fw && Math.abs(dy) <= fh) {
+        let sx = dx / (fw * 2) + 0.5 + wob * (1 - (dy / (fh * 2) + 0.5));
+        const sy = dy / (fh * 2) + 0.5;
+        if (sx >= 0 && sx <= 1) {
+          const v0 = sampleBake(bk, sx * (bk.w - 1), sy * (bk.h - 1));
+          const v = clamp(v0 * flick, 0, 1);
+          if (v > 0.04) res = over(res, [v, 0]);
+        }
       }
     }
     for (let k = 0; k < 10; k++) {
@@ -60,31 +63,21 @@
   });
 
   add('moonsea', '#0b1233', ['#e8ecff', '#5f74c9'], 16, (x, y, t, cols, rows) => {
+    const bk = getBake('moonsea');
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
-    const mx = cols * 0.12 / 1.06, my = u * 0.22, mr = u * 0.15;
     let res = 0;
-    const st = drift(X, Y, t, { scale: 0.5, thresh: 0.88, gain: 0.45, speed: 0.5, twinkle: 3 });
-    if (Y < u * 0.55 && st > 0) res = [st, 0];
-    const md = sdC(X, Y, mx, my, mr);
-    if (md < 1) {
-      const cr = fbm(X * 0.35 + 9, Y * 0.35 + 9, 3);
-      const v = shade((a, b) => sdC(a, b, mx, my, mr), X, Y, -0.65, -0.55);
-      if (v > 0) res = over(res, [clamp(v * (0.95 + 0.5 * (cr - 0.5)), 0.05, 1), 0]);
-    } else {
-      const g = glow(md, u * 0.05) * 0.30;
-      if (g > 0.05) res = over(res, [g, 0, 0.8]);
-    }
-    const seaTop = u * 0.58;
-    if (Y > seaTop - 2) {
-      const edge = seaTop + u * 0.008 * S(t, 1, X * 0.05);
-      if (Y > edge) {
-        const depth = ss(0, u * 0.18, Y - edge);
-        const tex = fbm(X * 0.18 + t * 2.0, Y * 0.30 - t, 3);
-        let v = clamp(0.10 + 0.55 * depth + 0.26 * (tex - 0.5), 0, 1);
-        const colW = u * 0.035 * (1 + depth * 2.2);
-        const shim = vnoise(X * 1.4, Y * 0.35 - t * 4);
-        if (Math.abs(X - mx) < colW && shim > 0.35) v = Math.max(v, 0.55 + 0.4 * ss(0.35, 0.8, shim) * (1 - depth * 0.5));
-        res = over(res, [v, 1]);
+    const st = drift(X, Y, t, { scale: 0.5, thresh: 0.92, gain: 0.4, speed: 0.5, twinkle: 3 });
+    if (st > 0) res = [st, 0];
+    if (bk) {
+      const fw = u * 0.48, fh = u * 0.50, cy = u * 0.50;
+      const dx = X, dy = Y - cy;
+      if (Math.abs(dx) <= fw && Math.abs(dy) <= fh) {
+        const sx = dx / (fw * 2) + 0.5, sy = dy / (fh * 2) + 0.5;
+        const eg = ss(0, 0.10, sx) * ss(1, 0.90, sx) * ss(0, 0.08, sy) * ss(1, 0.92, sy);
+        let v0 = sampleBake(bk, sx * (bk.w - 1), sy * (bk.h - 1)) * eg;
+        // sea shimmer: animate lower half
+        if (sy > 0.55) v0 *= 0.90 + 0.10 * vnoise(X * 1.2, Y * 0.4 - t * 3);
+        if (v0 > 0.04) res = over(res, [clamp(v0 * 1.15, 0, 1), sy > 0.55 ? 1 : 0]);
       }
     }
     return res;
@@ -116,35 +109,26 @@
   });
 
   add('dandelion', '#101a12', ['#eef5e6', '#8fbf8a'], 14, (x, y, t, cols, rows) => {
+    const bk = getBake('dandelion');
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
-    const cx = 0, cy = u * 0.40, R0 = u * 0.16;
     let res = 0;
-    const sdStem = (px, py) => sdSeg(px, py, 0, u * 0.88, cx + u * 0.03 * S(t, 1), cy) - u * 0.006;
-    if (Y > cy && Math.abs(X) < u * 0.2) {
-      const sh = shade(sdStem, X, Y, -0.5, -0.6);
-      if (sh > 0) res = [sh * 0.85, 1];
+    if (bk) {
+      const fw = u * 0.30, fh = u * 0.42, cy = u * 0.52;
+      const dx = X, dy = Y - cy;
+      if (Math.abs(dx) <= fw && Math.abs(dy) <= fh) {
+        const sx = dx / (fw * 2) + 0.5, sy = dy / (fh * 2) + 0.5;
+        const eg = ss(0, 0.08, sx) * ss(1, 0.92, sx) * ss(0, 0.06, sy) * ss(1, 0.94, sy);
+        const v0 = sampleBake(bk, sx * (bk.w - 1), sy * (bk.h - 1)) * eg;
+        if (v0 > 0.04) res = over(res, [clamp(v0 * 1.2, 0, 1), 0]);
+      }
     }
-    const dx = X - cx - u * 0.03 * S(t, 1), dy = Y - cy;
-    const r = Math.hypot(dx, dy);
-    if (r < R0 * 1.6) {
-      const a = Math.atan2(dy, dx);
-      const fil = 0.45 + 0.55 * ss(0.30, 0.62, vnoise(a * 5.2 + 20, 3.3));
-      const ringV = glow(Math.abs(r - R0), u * 0.009) * fil * 1.15;
-      const qa = Math.round(a * 22) / 22;
-      const tipd = sdC(dx, dy, Math.cos(qa) * R0, Math.sin(qa) * R0, u * 0.006);
-      const tipV = glow(tipd, 0.8) * (0.5 + 0.5 * ss(0.25, 0.6, vnoise(qa * 9, 8.8)));
-      const v = Math.max(ringV * 0.8, tipV);
-      const hub = glow(sdC(dx, dy, 0, 0, u * 0.012), 1.2);
-      const vv = Math.max(v, hub * 0.8);
-      if (vv > 0.05) res = over(res, [clamp(vv, 0, 1), 0]);
-    }
-    for (let k = 0; k < 8; k++) {
-      const p = (t + k / 8) % 1;
-      const ang = hash(k, 3) * TAU;
-      const sx = cx + Math.cos(ang) * (R0 + p * u * 0.30) + S(t, 1, k) * u * 0.02;
-      const sy = cy + Math.sin(ang) * (R0 + p * u * 0.22) - p * u * 0.16;
-      const d = sdC(X, Y, sx, sy, u * 0.005);
-      if (d < 1.2) { const v = glow(d, 0.9) * (1 - p * 0.8); if (v > 0.07) res = over(res, [v, 0]); }
+    // drifting seeds
+    for (let k = 0; k < 12; k++) {
+      const p = (t * 0.10 + hash(k, 11)) % 1;
+      const sx2 = (hash(k, 12) - 0.5) * u * 0.24 + p * u * 0.45 + S(t, 1.2, hash(k, 13)) * u * 0.05;
+      const sy2 = u * 0.34 + (hash(k, 14) - 0.5) * u * 0.2 - p * u * 0.42;
+      const d = sdC(X, Y, sx2, sy2, u * 0.003);
+      if (d < 1.5) { const v = glow(d, 1.0) * (1 - p) * 0.9; if (v > 0.05) res = over(res, [clamp(v, 0, 1), 1]); }
     }
     return res;
   });

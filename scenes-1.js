@@ -73,31 +73,20 @@
   });
 
   add('bird', '#6f7be8', ['#ffffff', '#454fb0'], 12, (x, y, t, cols, rows) => {
+    const bk = getBake('bird');
     const X = (x - cols / 2) / 1.06, Y = y;
     let res = 0;
     const cl = clouds(X, Y, t, 0.15, 0.58, 0.32);
     if (cl > 0) res = [cl, 1];
-    const flap = S(t, 3) * 1.0, bx = 0, by = rows * 0.38 + S(t, 1.5) * rows * 0.014, u = rows;
-    if (Math.abs(X - bx) < u * 0.5 && Math.abs(Y - by) < u * 0.38) {
-      const sdBird = (px, py) => {
-        let d = sdE(px, py, bx, by, u * 0.075, u * 0.026);
-        d = Math.min(d, sdC(px, py, bx + u * 0.075, by - u * 0.012, u * 0.022));
-        d = Math.min(d, sdTri(px, py, bx + u * 0.095, by - u * 0.012, bx + u * 0.125, by - u * 0.006, bx + u * 0.093, by + u * 0.002));
-        d = Math.min(d, sdTri(px, py, bx - u * 0.07, by, bx - u * 0.13, by - u * 0.03, bx - u * 0.13, by + u * 0.03));
-        for (const sgn of [-1, 1]) {
-          for (let k = 0; k < 4; k++) {
-            const p = (k + 0.6) / 4.3, wl = u * 0.36 * p;
-            const wy = by - Math.sin(flap * (0.30 + p * 0.85)) * wl * 0.62 - p * u * 0.02;
-            d = Math.min(d, sdE(px, py, bx + sgn * (u * 0.05 + wl), wy, u * 0.105 * (1.18 - p * 0.75), u * 0.034 * (1.1 - p * 0.5)));
-          }
-        }
-        return d;
-      };
-      const sh = shade(sdBird, X, Y, -0.5, -0.8);
-      if (sh > 0) {
-        let v = sh;
-        if (Math.abs(X - bx) > u * 0.06) v *= 0.72 + 0.28 * Math.abs(Math.sin((X - bx) * 2.2));
-        res = over(res, [clamp(v, 0, 1), 0]);
+    if (bk) {
+      const u = rows;
+      const pan = S(t, 0.35, 2) * u * 0.10, bob = S(t, 1.6) * u * 0.018;
+      const fw = u * 0.34, fh = u * 0.20, cy = u * 0.34 + bob;
+      const dx = X - pan, dy = Y - cy;
+      if (Math.abs(dx) <= fw && Math.abs(dy) <= fh) {
+        const sx = dx / (fw * 2) + 0.5, sy = dy / (fh * 2) + 0.5;
+        const v0 = sampleBake(bk, sx * (bk.w - 1), sy * (bk.h - 1));
+        if (v0 > 0.04) res = over(res, [clamp(v0 * 1.15, 0, 1), 0]);
       }
     }
     return res;
@@ -130,39 +119,25 @@
   });
 
   add('cycle', '#101014', ['#f2e6c4', '#8b8f98'], 12, (x, y, t, cols, rows) => {
-    const X = (x - cols / 2) / 1.06, Y = y;
-    const u = rows, gy = u * 0.68, wr = u * 0.125, w1x = -u * 0.21, w2x = u * 0.21, wy = gy - wr;
+    const bk = getBake('cycle');
+    const X = (x - cols / 2) / 1.06, Y = y, u = rows;
+    const gy = u * 0.68;
+    let res = 0;
     if (Y > gy + u * 0.004) {
       const dash = Y < gy + u * 0.035 ? (((X * 0.5 + t * 90) % 9 + 9) % 9 < 2.2 ? 0.32 : 0) : 0;
-      return [0.26 + dash + 0.18 * (fbm(X * 0.9, Y * 0.9, 2) - 0.5), 1];
+      res = [0.26 + dash + 0.18 * (fbm(X * 0.9, Y * 0.9, 2) - 0.5), 1];
     }
-    if (Math.abs(X) > u * 0.46 || Y < wy - u * 0.30 || Y > gy + 1) return 0;
-    const crankA = TAU * t * 2;
-    const sdBike = (px, py) => {
-      let d = Math.abs(sdC(px, py, w1x, wy, wr)) - u * 0.020;
-      d = Math.min(d, Math.abs(sdC(px, py, w2x, wy, wr)) - u * 0.020);
-      d = Math.min(d, sdC(px, py, w1x, wy, u * 0.014), sdC(px, py, w2x, wy, u * 0.014));
-      const tb = u * 0.020;
-      d = Math.min(d, sdSeg(px, py, w1x, wy, 0, wy - u * 0.115) - tb,
-        sdSeg(px, py, w2x, wy, 0, wy - u * 0.115) - tb,
-        sdSeg(px, py, w1x, wy, u * 0.025, wy) - tb,
-        sdSeg(px, py, u * 0.025, wy, w2x, wy) - tb,
-        sdSeg(px, py, 0, wy - u * 0.115, u * 0.025, wy) - tb);
-      d = Math.min(d, sdSeg(px, py, w2x, wy, w2x + u * 0.033, wy - u * 0.170) - u * 0.016,
-        sdSeg(px, py, w2x + u * 0.033, wy - u * 0.170, w2x + u * 0.095, wy - u * 0.175) - u * 0.014);
-      d = Math.min(d, sdSeg(px, py, 0, wy - u * 0.115, -u * 0.017, wy - u * 0.170) - u * 0.014,
-        sdSeg(px, py, -u * 0.060, wy - u * 0.173, u * 0.033, wy - u * 0.173) - u * 0.018);
-      for (let k = 0; k < 8; k++) {
-        const aA = crankA + k * TAU / 8;
-        d = Math.min(d, sdSeg(px, py, w1x, wy, w1x + Math.cos(aA) * wr * 0.9, wy + Math.sin(aA) * wr * 0.9) - u * 0.007,
-          sdSeg(px, py, w2x, wy, w2x + Math.cos(aA) * wr * 0.9, wy + Math.sin(aA) * wr * 0.9) - u * 0.007);
+    if (bk) {
+      const bounce = S(t, 4) * u * 0.006;
+      const fw = u * 0.42, fh = u * 0.24, cyc = u * 0.52 + bounce;
+      const dx = X, dy = Y - cyc;
+      if (Math.abs(dx) <= fw && Math.abs(dy) <= fh) {
+        const sx = dx / (fw * 2) + 0.5, sy = dy / (fh * 2) + 0.5;
+        const v0 = sampleBake(bk, sx * (bk.w - 1), sy * (bk.h - 1));
+        if (v0 > 0.04) res = over(res, [clamp(v0 * 1.2, 0, 1), 0]);
       }
-      d = Math.min(d, sdC(px, py, u * 0.025, wy, u * 0.020));
-      d = Math.min(d, sdSeg(px, py, u * 0.025, wy, u * 0.025 + Math.cos(crankA) * u * 0.055, wy + Math.sin(crankA) * u * 0.055) - u * 0.008);
-      return d;
-    };
-    const sh = shade(sdBike, X, Y, -0.5, -0.85);
-    return sh > 0 ? [sh, 0] : 0;
+    }
+    return res;
   });
 
   add('rain', '#1d2230', ['#bcd6ff', '#5f6b85'], 10, (x, y, t, cols, rows) => {

@@ -2,7 +2,7 @@
 'use strict';
 (function (root) {
   const H = root.__H, add = root.__addScene;
-  const { TAU, clamp, lerp, ss, S, B, vnoise, fbm, sdC, sdE, sdBox, sdSeg, sdVesica, shade, glow, over, drift, hash } = H;
+  const { TAU, clamp, lerp, ss, S, B, vnoise, fbm, sdC, sdE, sdBox, sdSeg, sdVesica, shade, glow, over, drift, hash, getBake, sampleBake } = H;
 
   add('pendulum', '#101018', ['#d8d4e8', '#8a86a0'], 8, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
@@ -117,82 +117,46 @@
   });
 
   add('swing', '#142030', ['#e8e0cc', '#7a94b0'], 12, (x, y, t, cols, rows) => {
+    const bk = getBake('swing');
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
-    const gy = u * 0.85;
     let res = 0;
-    if (Y > gy) res = [0.25 + 0.18 * fbm(X * 0.7, Y * 0.7, 2) + (vnoise(X * 2.5, Y) > 0.85 ? 0.25 : 0), 1];
-    const sdTree = (px, py) => {
-      let d = sdSeg(px, py, -cols * 0.45, u * 0.06, -u * 0.10, u * 0.16) - u * 0.020;
-      d = Math.min(d, sdSeg(px, py, -u * 0.14, u * 0.145, u * 0.16, u * 0.185) - u * 0.013);
-      const fol = sdE(px, py, -u * 0.30, u * 0.055, u * 0.16, u * 0.055);
-      if (fol < 0 && fbm(px * 0.5, py * 0.5, 3) > 0.42) d = Math.min(d, fol);
-      const fol2 = sdE(px, py, u * 0.10, u * 0.07, u * 0.13, u * 0.05);
-      if (fol2 < 0 && fbm(px * 0.5 + 9, py * 0.5, 3) > 0.45) d = Math.min(d, fol2);
-      return d;
-    };
-    const shT = shade(sdTree, X, Y, -0.5, -0.8);
-    if (shT > 0) res = over(res, [shT * 0.9, 1]);
-    const ang = S(t, 1) * 0.35;
-    const a1x = -u * 0.05, a2x = u * 0.05, ay = u * 0.205, chL = u * 0.42;
-    const s1x = a1x + Math.sin(ang) * chL, s1y = ay + Math.cos(ang) * chL;
-    const s2x = a2x + Math.sin(ang) * chL, s2y = ay + Math.cos(ang) * chL;
-    const sdSwing = (px, py) => Math.min(
-      sdSeg(px, py, a1x, ay, s1x, s1y) - u * 0.0035,
-      sdSeg(px, py, a2x, ay, s2x, s2y) - u * 0.0035,
-      sdSeg(px, py, s1x, s1y, s2x, s2y) - u * 0.010);
-    const dS = sdSwing(X, Y);
-    if (dS < 0.8) {
-      const sh = shade(sdSwing, X, Y, -0.5, -0.75);
-      if (sh > 0) res = over(res, [sh, 0]);
+    const st = drift(X, Y, t, { scale: 0.5, thresh: 0.93, gain: 0.35, speed: 0.4, twinkle: 2 });
+    if (st > 0) res = [st, 1];
+    if (bk) {
+      const fw = u * 0.40, fh = u * 0.50, cy = u * 0.52;
+      const dx = X, dy = Y - cy;
+      if (Math.abs(dx) <= fw * 1.15 && Math.abs(dy) <= fh) {
+        let sx = dx / (fw * 2) + 0.5, sy = dy / (fh * 2) + 0.5;
+        // sway: rotate sample around rope anchor near bake top-center
+        const a = 0.05 * S(t, 1.1);
+        const ax = 0.5, ay = 0.02;
+        const rx = sx - ax, ry = sy - ay;
+        sx = ax + rx * Math.cos(a) + ry * Math.sin(a);
+        sy = ay - rx * Math.sin(a) + ry * Math.cos(a);
+        if (sx >= 0 && sx <= 1 && sy >= 0 && sy <= 1) {
+          const eg = ss(0, 0.06, sx) * ss(1, 0.94, sx) * ss(0, 0.04, sy) * ss(1, 0.96, sy);
+          const v0 = sampleBake(bk, sx * (bk.w - 1), sy * (bk.h - 1)) * eg;
+          if (v0 > 0.04) res = over(res, [clamp(v0 * 1.2, 0, 1), 0]);
+        }
+      }
     }
-    const fire = drift(X, Y, t, { gain: 0.14, thresh: 0.92, speed: 1 });
-    if (fire > 0) res = over(res, [fire, 0]);
     return res;
   });
 
   add('sprout', '#101a10', ['#a8e88a', '#e8f5d8'], 16, (x, y, t, cols, rows) => {
+    const bk = getBake('sprout');
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
-    const gy = u * 0.74;
     let res = 0;
-    if (Y > gy - 2) {
-      const mound = sdE(X, Y, 0, gy + u * 0.06, u * 0.30, u * 0.075);
-      if (mound < 0) res = [0.30 + 0.25 * ss(-u * 0.05, 0, mound) + 0.15 * fbm(X * 1.1, Y * 1.1, 2), 1];
-      else if (Y > gy + u * 0.10) res = [0.18, 1];
-    }
-    const g = glow(sdC(X, Y, cols * 0.18, u * 0.12, u * 0.03), u * 0.07) * (0.35 + 0.15 * S(t, 2));
-    if (g > 0.05) res = over(res, [g, 0, 0.8]);
-    const grow = ss(0.04, 0.45, t);
-    const stemH = u * 0.34 * grow;
-    const topY = gy - stemH, sway = S(t, 1) * u * 0.012 * grow;
-    if (grow > 0.01 && Math.abs(X) < u * 0.25 && Y > topY - u * 0.1 && Y < gy + 1) {
-      const rotE = (px, py, cx, cy, a, rx, ry) => {
-        const ca = Math.cos(a), sa = Math.sin(a);
-        const lx = (px - cx) * ca + (py - cy) * sa, ly = -(px - cx) * sa + (py - cy) * ca;
-        return sdE(lx, ly, 0, 0, rx, ry);
-      };
-      const sdPlant = (px, py) => {
-        let d = sdSeg(px, py, 0, gy, sway, topY) - u * 0.006;
-        const leafG = ss(0.35, 0.75, grow);
-        if (leafG > 0.01) {
-          const lL = u * 0.105 * leafG;
-          d = Math.min(d, rotE(px, py, sway - lL * 0.8, topY + u * 0.015, 0.5, lL, lL * 0.45),
-            rotE(px, py, sway + lL * 0.8, topY + u * 0.045, -0.5, lL, lL * 0.45));
-        }
-        return d;
-      };
-      const sh = shade(sdPlant, X, Y, -0.4, -0.8);
-      if (sh > 0) res = over(res, [sh, 0]);
-      const leafG = ss(0.35, 0.75, grow);
-      if (leafG > 0.3) {
-        const tip = glow(sdC(X, Y, sway, topY, u * 0.006), 1.0);
-        if (tip > 0.1) res = over(res, [tip, 1]);
+    if (bk) {
+      const br = 1 + 0.02 * S(t, 0.9);
+      const fw = u * 0.34 * br, fh = u * 0.42 * br, cy = u * 0.54;
+      const dx = X, dy = Y - cy;
+      if (Math.abs(dx) <= fw && Math.abs(dy) <= fh) {
+        const sx = dx / (fw * 2) + 0.5, sy = dy / (fh * 2) + 0.5;
+        const eg = ss(0, 0.08, sx) * ss(1, 0.92, sx) * ss(0, 0.06, sy) * ss(1, 0.94, sy);
+        const v0 = sampleBake(bk, sx * (bk.w - 1), sy * (bk.h - 1)) * eg;
+        if (v0 > 0.04) res = over(res, [clamp(v0 * 1.2, 0, 1), v0 > 0.6 ? 1 : 0]);
       }
-    }
-    for (let k = 0; k < 4; k++) {
-      const p = (t * 0.5 + k / 4) % 1;
-      const dx2 = (hash(k, 5) - 0.5) * u * 0.3, dy2 = u * 0.3 + p * u * 0.4;
-      const d = sdC(X, Y, dx2, dy2, u * 0.003);
-      if (d < 1) { const v = glow(d, 0.8) * 0.3 * (1 - p); if (v > 0.08) res = over(res, [v, 1]); }
     }
     return res;
   });
