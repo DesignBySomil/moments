@@ -26,7 +26,7 @@
     if (sx < 0 || sx > 1) return amb();
     const v0 = sampleBake(bk, sx * (bk.w - 1), sy * (bk.h - 1));
     const flame = sy < 0.52;
-    const v = clamp(v0 * (flame ? flick : 0.95 + 0.05 * S(t, 2)), 0, 1);
+    const v = clamp(v0 * 1.3 * (flame ? flick : 0.95 + 0.05 * S(t, 2)), 0, 1);
     if (v <= 0.02) return amb();
     return [v, flame ? 0 : 1];
   });

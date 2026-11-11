@@ -41,8 +41,9 @@
       const dx = X - cxc, dy = Y - cyc;
       if (Math.abs(dx) <= fw && Math.abs(dy) <= fh) {
         const sx = dx / (fw * 2) + 0.5, sy = dy / (fh * 2) + 0.5;
-        const v0 = sampleBake(bk, sx * (bk.w - 1), sy * (bk.h - 1));
-        if (v0 > 0.03) res = over(res, [clamp(v0, 0, 1), sy < 0.34 ? 1 : 0]);
+        const edge = ss(0, 0.14, sx) * ss(1, 0.86, sx) * ss(0, 0.10, sy) * ss(1, 0.90, sy);
+        const v0 = sampleBake(bk, sx * (bk.w - 1), sy * (bk.h - 1)) * edge;
+        if (v0 > 0.14) res = over(res, [clamp((v0 - 0.12) * 1.8, 0, 1), sy < 0.34 ? 1 : 0]);
       }
     }
     return res;
