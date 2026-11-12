@@ -23,7 +23,7 @@
         return Math.max(e(ax, ay, bx, by), e(bx, by, cx, cy), e(cx, cy, ax, ay)) / (u * 0.3);
       };
       const sh = shade(sdHouse, X, Y, -0.4, -0.85);
-      if (sh > 0) res = over(res, [clamp(sh * 1.9, 0, 1), 1]);
+      if (sh > 0) res = over(res, [clamp(sh * 0.62, 0, 1), 0]);
       const winD = sdBox(X, Y, hx - hw * 0.4, (ht + hb) / 2, u * 0.022, u * 0.022);
       if (winD < 0) res = over(res, [1.0, 2]);
       const w2 = sdBox(X, Y, hx + hw * 0.4, (ht + hb) / 2, u * 0.022, u * 0.022);
@@ -86,7 +86,7 @@
         return Math.max(e(ax, ay, bx, by), e(bx, by, cx, cy), e(cx, cy, ax, ay)) / (u * 0.2);
       };
       const sh = shade(sdTower, X, Y, -0.6, -0.7);
-      if (sh > 0) res = over(res, [clamp(sh * 1.2, 0, 1), 0]);
+      if (sh > 0) res = over(res, [clamp(sh * 0.65, 0, 1), 0]);
       if (sdE(X, Y, lx, lampY - u * 0.018, u * 0.020, u * 0.020) < 0) res = over(res, [1.5, 0]);
       const dLG = sdC(X, Y, lx, lampY - u * 0.018, 0);
       res = over(res, [glow(dLG, u * 0.030) * 0.8, 0]);
