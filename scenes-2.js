@@ -82,36 +82,54 @@
           const top = ss(r * 1.1, -r * 0.9, Y - axisY);
           const bark = 0.86 + 0.14 * Math.sin(s * 21 + k * 2.4);
           const v = (0.34 + 0.80 * top) * bark * m * (k === 2 ? 0.9 : 1);
-          res = [clamp(v, 0, 1), 1];
+          res = [clamp(v, 0, 0.92), 1];
         }
       }
     }
-    // flame: 3 nested teardrop layers, independent sway, hot core
+    // flame: 3 nested ragged layers - side-independent noisy outline, curling tips, hot core
     const layers = [
-      [u * 0.190, u * 0.42, 0.30, 2.1],
-      [u * 0.130, u * 0.34, 0.65, 4.7],
-      [u * 0.070, u * 0.23, 1.00, 8.3]];
-    if (Y < base + 2 && Y > base - u * 0.55 && Math.abs(X) < u * 0.38) {
+      [u * 0.190, u * 0.44, 0.34, 2.1],
+      [u * 0.125, u * 0.35, 0.70, 4.7],
+      [u * 0.065, u * 0.24, 1.30, 8.3]];
+    if (Y < base + 2 && Y > base - u * 0.58 && Math.abs(X) < u * 0.40) {
       for (let i = 0; i < 3; i++) {
         const [w, h, bright, ph] = layers[i];
         const ty = (base - Y) / h;
-        if (ty <= 0 || ty >= 1) continue;
-        const sway = S(t, 2.6 + i * 0.7, ph) * (0.10 + ty * 0.38) * w + S(t, 6 + i, ph * 1.7) * ty * w * 0.22;
-        const wshape = w * Math.sin(Math.PI * Math.pow(ty, 0.72)) * (0.82 + 0.36 * fbm(X * 0.9 + i * 5, ty * 3 - t * (5 + i * 2), 2));
-        const d = Math.abs(X - sway) / Math.max(wshape, 0.001);
-        const v = (1 - d * d) * bright * (0.86 + 0.14 * S(t, 5.2, ph));
-        if (v > 0.10) res = over(res, [clamp(v, 0, 1), 0]);
+        if (ty <= 0.02 || ty >= 1) continue;
+        const curl = 0.06 + ty * ty * 0.62;
+        const sway = S(t, 2.6 + i * 0.7, ph) * curl * w + S(t, 6 + i, ph * 1.7) * ty * w * 0.26;
+        const prof = Math.sin(Math.PI * Math.pow(ty, 0.70));
+        const nL = fbm(ty * 3.1 - t * (5.5 + i * 1.6), i * 11.3, 2);
+        const nR = fbm(ty * 2.7 - t * (6.5 + i * 1.3), i * 7.9 + 40, 2);
+        const dx2 = X - sway;
+        const wSide = dx2 < 0 ? w * prof * (0.42 + 0.95 * nL) : w * prof * (0.42 + 0.95 * nR);
+        const d = Math.abs(dx2) / Math.max(wSide, 0.001);
+        const fl = 0.80 + 0.20 * S(t, 5.2, ph) + 0.25 * fbm(ty * 2 - t * 7, ph, 2);
+        const v = (1 - d * d) * bright * fl;
+        if (v > 0.10) res = over(res, [clamp(v, 0, 1.6), 0]);
       }
+      // tongue that licks upward and detaches near the tip
+      const tg = (t * 0.5 + 0.3) % 1;
+      const tyc = 0.40 + tg * 0.48;
+      const tyT = (base - Y) / (u * 0.44);
+      if (tyT > tyc - 0.16 && tyT < tyc + 0.16) {
+        const ts = S(t, 2.2, 9.7) * (0.06 + tyc * tyc * 0.62) * u * 0.19 + S(t, 0.9, 3.1) * u * 0.06;
+        const tw = u * 0.030 * Math.sin(Math.PI * (tyT - tyc + 0.16) / 0.32) * (0.5 + 0.8 * fbm(tyT * 5 - t * 8, 31, 2));
+        const dT = Math.abs(X - ts) / Math.max(tw, 0.001);
+        const vT = (1 - dT * dT) * 0.85 * (1 - tg * 0.5);
+        if (vT > 0.12) res = over(res, [clamp(vT, 0, 1.3), 0]);
+      }
+      // side licks, same ragged treatment
       for (let k = 0; k < 2; k++) {
         const dir = k === 0 ? -1 : 1;
-        const ty = (base - Y) / (u * 0.28);
-        if (ty <= 0 || ty >= 1) continue;
-        const sway = S(t, 3.4, k * 5.1) * ty * u * 0.03;
-        const cx = dir * u * 0.125 + sway;
-        const wshape = u * 0.032 * Math.sin(Math.PI * ty);
-        const d = Math.abs(X - cx) / Math.max(wshape, 0.001);
-        const v = (1 - d * d) * 0.45 * (0.7 + 0.3 * S(t, 4.4, k * 3.3));
-        if (v > 0.12) res = over(res, [clamp(v, 0, 1), 0]);
+        const ty2 = (base - Y) / (u * 0.30);
+        if (ty2 <= 0 || ty2 >= 1) continue;
+        const sway2 = S(t, 3.4, k * 5.1) * ty2 * ty2 * u * 0.05;
+        const cx = dir * u * (0.115 + 0.03 * S(t, 1.7, k * 2.2)) + sway2;
+        const wshape = u * 0.034 * Math.sin(Math.PI * ty2) * (0.45 + 0.85 * fbm(ty2 * 4 - t * 7, k * 13 + 9, 2));
+        const dL = Math.abs(X - cx) / Math.max(wshape, 0.001);
+        const vL = (1 - dL * dL) * 0.50 * (0.7 + 0.3 * S(t, 4.4, k * 3.3));
+        if (vL > 0.12) res = over(res, [clamp(vL, 0, 1.2), 0]);
       }
     }
     // rising sparks
@@ -123,7 +141,7 @@
       if (d < 1.2) { const v = glow(d, 0.8) * (1 - p) * 0.9; if (v > 0.06) res = over(res, [v, 0]); }
     }
     return res;
-  });
+  }, { bloom: true });
 
   add('moonsea', '#070b24', ['#e8ecff', '#5f74c9'], 16, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
