@@ -115,10 +115,10 @@
     }
     const bob = S(t, 2, 0.1) * u * 0.003;
     // hero locomotive, cropped 3/4 front, nose right
-    const noseX = u * 0.17, boilY = u * 0.565 + bob, boilR = u * 0.078;
-    const cabX = -u * 0.148, cabY = u * 0.475 + bob;
+    const noseX = u * 0.155, boilY = u * 0.565 + bob, boilR = u * 0.078;
+    const cabX = -u * 0.132, cabY = u * 0.475 + bob;
     // boiler: big capsule with sculpted lighting
-    const sdBoiler = (px, py) => sdE(px, py, -u * 0.02, boilY, u * 0.20, boilR);
+    const sdBoiler = (px, py) => sdE(px, py, 0, boilY, u * 0.19, boilR);
     const dB = sdBoiler(X, Y);
     if (dB < 1.2) {
       let v = clamp(0.55 + 0.65 * (0.5 - (Y - boilY) / (boilR * 1.4)), 0.10, 1.15); // hot crown, dark belly
@@ -149,9 +149,9 @@
     if (sdBox(X, Y, cabX + u * 0.010, cabY - u * 0.040, u * 0.017, u * 0.024) < 0) res = over(res, [0.98, 0]);
     if (sdBox(X, Y, cabX + u * 0.044, cabY - u * 0.040, u * 0.012, u * 0.024) < 0) res = over(res, [0.85, 0]);
     // cab roof
-    if (sdE(X, Y, cabX, cabY - u * 0.092, u * 0.070, u * 0.012) < 0.5) res = over(res, [0.9, 1]);
+    if (sdE(X, Y, cabX, cabY - u * 0.092, u * 0.062, u * 0.012) < 0.5) res = over(res, [0.9, 1]);
     // running board: bright step line under boiler
-    if (Math.abs(Y - (boilY + boilR + u * 0.006)) < 1.2 && X > -u * 0.225 && X < noseX + u * 0.01) res = over(res, [0.60, 1]);
+    if (Math.abs(Y - (boilY + boilR + u * 0.006)) < 1.2 && X > -u * 0.205 && X < noseX + u * 0.01) res = over(res, [0.60, 1]);
     // driving wheels with rotating spokes + connecting rod
     const wY = boilY + boilR + u * 0.038;
     const wa = t * 4;
@@ -184,10 +184,10 @@
     const dh = sdC(X, Y, hx + u * 0.008, hy, u * 0.007);
     if (dh < 2.5) { const v = glow(dh, 1.4); if (v > 0.05) res = over(res, [clamp(v * 1.4, 0, 1), 0]); }
     const rel = X - hx;
-    if (rel > 0 && rel < u * 0.05) {
+    if (rel > 0 && rel < u * 0.030) {
       const spread = u * 0.006 + rel * 0.42;
       const perp = Math.abs(Y - hy - rel * 0.28);
-      if (perp < spread) { const v = (1 - perp / spread) * (1 - rel / (u * 0.05)) * 0.5; if (v > 0.04) res = over(res, [v, 0]); }
+      if (perp < spread) { const v = (1 - perp / spread) * (1 - rel / (u * 0.030)) * 0.5; if (v > 0.04) res = over(res, [v, 0]); }
     }
     // steam puffs from chimney, rising and drifting left
     for (let k = 0; k < 5; k++) {
