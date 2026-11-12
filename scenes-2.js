@@ -176,7 +176,7 @@
     const sway = S(t, 0.7) * u * 0.012;
     const cx = sway, cy = u * 0.38, R = u * 0.175;
     // stem: two-segment curve from the ground to the puff base
-    const sx0 = u * 0.09, sy0 = u * 0.99, sx1 = -u * 0.035, sy1 = u * 0.72;
+    const sx0 = u * 0.035, sy0 = u * 0.99, sx1 = u * 0.014, sy1 = u * 0.72;
     const dStem = Math.min(sdSeg(X, Y, sx0, sy0, sx1, sy1), sdSeg(X, Y, sx1, sy1, cx, cy + R * 0.95));
     if (dStem < 1.4) { const v = glow(dStem, u * 0.004) * 0.6; if (v > 0.05) res = over(res, [clamp(v, 0, 1), 1]); }
     // small leaf on the lower stem

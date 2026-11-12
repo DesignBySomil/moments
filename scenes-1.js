@@ -161,36 +161,51 @@
 
   add('cycle', '#101014', ['#f2e6c4', '#8b8f98'], 12, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
-    const gy = u * 0.72;
+    const gy = u * 0.78;
     let res = 0;
     if (Y > gy + u * 0.004) {
       const dash = Y < gy + u * 0.035 ? (((X * 0.5 + t * 90) % 9 + 9) % 9 < 2.2 ? 0.22 : 0) : 0;
       res = [0.15 + dash + 0.10 * (fbm(X * 0.9, Y * 0.9, 2) - 0.5), 1];
     }
+    // night streetlamp: pole, hot head, halo, light pool on the road
+    const lpX = -u * 0.26, lpTop = u * 0.30;
+    const sdPole = (px, py) => sdSeg(px, py, lpX, gy, lpX, lpTop) - u * 0.006;
+    const dP = sdPole(X, Y);
+    if (dP < 0.8) {
+      const sh = shade(sdPole, X, Y, -0.5, -0.6);
+      if (sh > 0) res = over(res, [clamp(sh * 0.9, 0, 1), 1]);
+    }
+    if (sdSeg(X, Y, lpX, lpTop, lpX + u * 0.045, lpTop - u * 0.012) - u * 0.005 < 0.5) res = over(res, [0.7, 1]);
+    const lampX = lpX + u * 0.050, lampY = lpTop - u * 0.016;
+    const dLamp = sdC(X, Y, lampX, lampY, u * 0.011);
+    if (dLamp < 6) { const v = glow(dLamp, 2.6); if (v > 0.04) res = over(res, [clamp(v * 1.25, 0, 1), 0]); }
+    if (sdE(X, Y, lampX + u * 0.05, gy + u * 0.012, u * 0.13, u * 0.014) < 0) res = over(res, [0.30, 0]);
     const bounce = S(t, 4) * u * 0.005;
-    const r = u * 0.075, wy = gy - r + bounce;
-    const ax = -u * 0.13, bx2 = u * 0.13;
+    const r = u * 0.115, wy = gy - r + bounce;
+    const ax = -u * 0.175, bx2 = u * 0.175;
     // wheels: tire ring + hub + 6 rotating spokes
     for (let w = 0; w < 2; w++) {
       const wx = w === 0 ? ax : bx2;
-      const sdRing = (px, py) => Math.abs(sdC(px, py, wx, wy, r)) - u * 0.007;
+      // ground contact shadow
+      if (sdE(X, Y, wx, gy + u * 0.008, r * 0.85, u * 0.008) < 0) res = over(res, [0.05, 1]);
+      const sdRing = (px, py) => Math.abs(sdC(px, py, wx, wy, r)) - u * 0.009;
       const dR = sdRing(X, Y);
       if (dR < 0.8) {
         const sh = shade(sdRing, X, Y, -0.45, -0.8);
-        if (sh > 0) res = over(res, [clamp(sh * 1.1, 0, 1), 1]);
+        if (sh > 0) res = over(res, [clamp(sh * 1.25, 0, 1), 1]);
       }
       if (sdC(X, Y, wx, wy, u * 0.011) < 0.5) res = over(res, [0.75, 1]);
-      for (let s = 0; s < 6; s++) {
-        const a = t * 6 + s * Math.PI / 3;
-        const dS = sdSeg(X, Y, wx, wy, wx + Math.cos(a) * r * 0.92, wy + Math.sin(a) * r * 0.92) - u * 0.0018;
-        if (dS < 0.4) res = over(res, [0.38, 1]);
+      for (let s = 0; s < 8; s++) {
+        const a = t * 6 + s * Math.PI / 4;
+        const dS = sdSeg(X, Y, wx, wy, wx + Math.cos(a) * r * 0.92, wy + Math.sin(a) * r * 0.92) - u * 0.0016;
+        if (dS < 0.4) res = over(res, [0.26, 1]);
       }
     }
     // frame: shaded fat tubes
-    const bb = [-u * 0.005, wy + r * 0.15], st = [-u * 0.070, wy - r * 1.35], ht = [u * 0.070, wy - r * 1.25], hb = [u * 0.092, wy - r * 0.58];
+    const bb = [-u * 0.005, wy + r * 0.18], st = [-u * 0.085, wy - r * 1.30], ht = [u * 0.082, wy - r * 1.22], hb = [u * 0.105, wy - r * 0.55];
     const tubes = [[ax, wy, bb[0], bb[1]], [bb[0], bb[1], st[0], st[1]], [ax, wy, st[0], st[1]], [bb[0], bb[1], hb[0], hb[1]], [st[0], st[1], ht[0], ht[1]], [hb[0], hb[1], bx2, wy], [ht[0], ht[1], hb[0], hb[1]]];
     for (const [x0, y0, x1, y1] of tubes) {
-      const sdT = (px, py) => sdSeg(px, py, x0, y0, x1, y1) - u * 0.0085;
+      const sdT = (px, py) => sdSeg(px, py, x0, y0, x1, y1) - u * 0.011;
       const dT = sdT(X, Y);
       if (dT < 0.8) {
         const sh = shade(sdT, X, Y, -0.45, -0.8);
@@ -202,7 +217,17 @@
     if (sdSeg(X, Y, ht[0] - u * 0.006, ht[1], ht[0] + u * 0.022, ht[1] - u * 0.016) - u * 0.0045 < 0.4) res = over(res, [0.85, 0]);
     // crank + pedals rotating
     const ca = t * 6;
-    if (sdSeg(X, Y, bb[0] - Math.cos(ca) * u * 0.022, bb[1] - Math.sin(ca) * u * 0.022, bb[0] + Math.cos(ca) * u * 0.022, bb[1] + Math.sin(ca) * u * 0.022) - u * 0.0035 < 0.4) res = over(res, [0.8, 0]);
+    // chainring with lightening holes
+    const dRing = Math.abs(sdC(X, Y, bb[0], bb[1], u * 0.024)) - u * 0.004;
+    if (dRing < 0.5) res = over(res, [0.80, 0]);
+    for (let h = 0; h < 4; h++) {
+      const ha = h * Math.PI / 2 + 0.4;
+      if (sdC(X, Y, bb[0] + Math.cos(ha) * u * 0.013, bb[1] + Math.sin(ha) * u * 0.013, u * 0.004) < 0) res = over(res, [0.10, 0]);
+    }
+    // chain: two runs to the rear hub
+    const dCh = Math.min(sdSeg(X, Y, bb[0], bb[1] - u * 0.020, ax, wy - u * 0.008), sdSeg(X, Y, bb[0], bb[1] + u * 0.022, ax, wy + u * 0.009)) - u * 0.0022;
+    if (dCh < 0.4) res = over(res, [0.28, 1]);
+    if (sdSeg(X, Y, bb[0] - Math.cos(ca) * u * 0.022, bb[1] - Math.sin(ca) * u * 0.022, bb[0] + Math.cos(ca) * u * 0.022, bb[1] + Math.sin(ca) * u * 0.022) - u * 0.0035 < 0.4) res = over(res, [0.85, 0]);
     return res;
   });
 
@@ -216,14 +241,37 @@
       const v = ss(0.36, 0.78, cm) * (0.55 + flash) * ss(rows * 0.015, rows * 0.20 + ragged, Y);
       if (v > 0.03) res = [v, 1];
     }
+    // distant skyline: discrete flat-roof towers with warm window grids
+    {
+      const bw = 8;
+      const b = Math.floor(X / bw);
+      const inGap = X - b * bw > bw - 1.5;
+      const roof = rows * (0.58 + 0.20 * hash(b * 3.7, 4.2));
+      if (Y > roof && Y < rows * 0.895 && !inGap) {
+        // street glow near the base, dimmer toward the roof
+        const street = 1 - clamp((Y - roof) / (rows * 0.895 - roof), 0, 1);
+        res = over(res, [0.24 + 0.14 * street + 0.05 * hash(b * 9.1, 8.8), 1]);
+        const wy = Math.floor((Y - roof) / 3.5), wx = Math.floor((X - b * bw) / 3);
+        if (hash(b * 7.3 + wy * 13.7 + wx * 5.1, 2.6) > 0.45 && (X - b * bw) % 3 < 1.6 && (Y - roof) % 3.5 < 1.8)
+          res = over(res, [0.88, 0]);
+      }
+    }
     const slant = Y * 0.12;
     const st = vnoise((X + slant) * 1.9, Y * 0.30 - t * 26);
     const st2 = vnoise((X + slant) * 1.9 + 40, Y * 0.24 - t * 19);
     if (st > 0.82 && Y > rows * 0.06) res = over(res, [ss(0.82, 0.92, st), 0, 0.95]);
     else if (st2 > 0.85 && Y > rows * 0.06) res = over(res, [ss(0.85, 0.95, st2) * 0.42, 0, 0.8]);
-    if (Y > rows * 0.90) {
+    if (Y > rows * 0.895) {
       const rf = fbm(X * 0.3 + t * 6, Y * 0.8, 2);
-      res = over(res, [0.20 + 0.24 * rf, 1]);
+      res = over(res, [0.18 + 0.22 * rf, 1]);
+      // mirrored tower windows smeared in the puddle
+      const bw2 = 8, b2 = Math.floor(X / bw2);
+      const roof2 = rows * (0.58 + 0.20 * hash(b2 * 3.7, 4.2));
+      const wob = fbm(X * 0.5 + t * 3, Y * 0.5, 2) * rows * 0.02;
+      const myY = rows * 1.79 - Y + wob;
+      const wy = Math.floor((myY - roof2) / 3.5), wx = Math.floor((X - b2 * bw2) / 3);
+      if (myY > roof2 && hash(b2 * 7.3 + wy * 13.7 + wx * 5.1, 2.6) > 0.45 && (X - b2 * bw2) % 3 < 1.6)
+        res = over(res, [0.55, 0]);
     }
     // splash rings where drops hit the wet ground
     for (let k = 0; k < 6; k++) {
