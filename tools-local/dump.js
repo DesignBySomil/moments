@@ -34,11 +34,11 @@ for (const sc of list) {
         if (i <= 0.045) { row.push(0); continue; }
         let lvl = (i * (RAMP.length - 1) + 0.5) | 0;
         if (lvl < 1) lvl = 1; if (lvl >= RAMP.length) lvl = RAMP.length - 1;
-        row.push([lvl, ink, Math.round(a * 100) / 100]);
+        row.push([lvl, ink, Math.round(a * 100) / 100, Math.round(i * 100) / 100]);
       }
       cells.push(row);
     }
-    out.push({ id: sc.id, name: sc.name, bg: sc.bg, inks: sc.inks, loop: sc.loop, phase: ph, cols, rows, cells });
+    out.push({ id: sc.id, name: sc.name, bg: sc.bg, inks: sc.inks, loop: sc.loop, bloom: !!sc.bloom, phase: ph, cols, rows, cells });
   }
 }
 fs.writeFileSync(process.argv[6] || '/tmp/frames.json', JSON.stringify(out));

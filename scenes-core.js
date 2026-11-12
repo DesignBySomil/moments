@@ -95,7 +95,7 @@
   }
 
   const items = [];
-  function add(id, bg, inks, loop, f) { items.push({ id, name: id, bg, inks, loop, f }); }
+  function add(id, bg, inks, loop, f, opts) { const sc = { id, name: id, bg, inks, loop, f }; if (opts) Object.assign(sc, opts); items.push(sc); }
   const H = { TAU, clamp, lerp, ss, S, B, hash, vnoise, fbm, sdC, sdE, sdBox, sdSeg, sdVesica, shade, glow, over, drift, waveField, getBake, sampleBake };
 
   root.ASCII_SCENES = items;

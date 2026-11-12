@@ -6,19 +6,27 @@ const Engine = (() => {
   const ctx = canvas.getContext('2d');
   const RAMP = ' .:-=+*x#%@';
   let scene = null, W = 0, H = 0, dpr = 1, cols = 0, rows = 0, cw = 0, ch = 0;
-  let atlas = null, lastFrame = 0;
+  let atlas = null, lastFrame = 0, atlasPad = 0, bloomScene = false, whiteInk = 0;
 
   function buildAtlas() {
-    const fs = ch * 0.98 * dpr;
-    atlas = scene.inks.map(color => RAMP.split('').map(c => {
+    bloomScene = !!scene.bloom;
+    const pad = bloomScene ? Math.ceil(ch * dpr * 1.4) : 0;
+    atlasPad = pad;
+    const inkList = bloomScene ? scene.inks.concat(['#ffffff']) : scene.inks;
+    whiteInk = inkList.length - 1;
+    atlas = inkList.map(color => RAMP.split('').map((c, li) => {
+      const scale = bloomScene ? 0.70 + 0.06 * li : 1;
+      const fs = ch * 0.98 * dpr * scale;
       const cv = document.createElement('canvas');
-      cv.width = Math.max(2, Math.ceil(cw * dpr));
-      cv.height = Math.max(2, Math.ceil(ch * dpr));
+      cv.width = Math.max(2, Math.ceil(cw * dpr) + pad * 2);
+      cv.height = Math.max(2, Math.ceil(ch * dpr) + pad * 2);
       const c2 = cv.getContext('2d');
       c2.font = '700 ' + fs + 'px "Courier New", monospace';
       c2.textAlign = 'center'; c2.textBaseline = 'middle';
       c2.fillStyle = color;
+      if (bloomScene && li >= 5) { c2.shadowColor = color; c2.shadowBlur = (li - 4) * 2.0 * dpr; }
       c2.fillText(c, cv.width / 2, cv.height / 2 + fs * 0.02);
+      if (bloomScene && li >= 8) { c2.shadowBlur = 0; c2.fillText(c, cv.width / 2, cv.height / 2 + fs * 0.02); }
       return cv;
     }));
   }
@@ -49,11 +57,16 @@ const Engine = (() => {
         let i, ink = 0, a = 1;
         if (typeof v === 'number') i = v; else { i = v[0]; ink = v[1] || 0; a = v[2] == null ? 1 : v[2]; }
         if (i <= 0.045) continue;
+        let wl = 0;
+        if (bloomScene && i > 1) { wl = i - 1; if (wl > 1) wl = 1; i = 1; }
         let lvl = (i * (RAMP.length - 1) + 0.5) | 0;
         if (lvl < 1) lvl = 1; if (lvl >= RAMP.length) lvl = RAMP.length - 1;
         if (a !== 1) ctx.globalAlpha = alpha * a;
-        ctx.drawImage(atlas[ink][lvl], (x * cw * dpr) | 0, (y * ch * dpr) | 0, pw, ph);
-        if (a !== 1) ctx.globalAlpha = alpha;
+        const dx = ((x * cw * dpr) | 0) - atlasPad, dy = ((y * ch * dpr) | 0) - atlasPad;
+        const dw = pw + atlasPad * 2, dh = ph + atlasPad * 2;
+        ctx.drawImage(atlas[ink][lvl], dx, dy, dw, dh);
+        if (wl > 0) { ctx.globalAlpha = alpha * a * wl; ctx.drawImage(atlas[whiteInk][lvl], dx, dy, dw, dh); }
+        if (a !== 1 || wl > 0) ctx.globalAlpha = alpha;
       }
     }
     ctx.globalAlpha = 1;

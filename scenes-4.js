@@ -121,28 +121,29 @@
         const dW = rotEll(X, Y, cx + ox, cy + oy, ang, wrx, wry);
         if (dW < 0.8) {
           const rim = ss(-u * 0.006, u * 0.001, dW);
-          let v = glow(dW, u * 0.006) * (1 - 0.28 * rim);
+          const core = ss(0, -u * 0.030, dW);
+          let v = glow(dW, u * 0.006) * (1 - 0.28 * rim) * (0.85 + 0.55 * core);
           let ink = rim > 0.5 ? 1 : 0;
           if (dW < 0) v += 0.30 * glow(sdC(X, Y, cx + ox * 0.35, cy + oy * 0.35, 0), u * 0.030);
           if (i === 0 && dW < 0) {
             const spotD = Math.min(
               sdC(X, Y, cx + ox + s * wrx * 0.45, cy + oy - wry * 0.35, u * 0.006),
               sdC(X, Y, cx + ox + s * wrx * 0.62, cy + oy + wry * 0.05, u * 0.005));
-            if (spotD < 0) { v = 0.95; ink = 2; }
+            if (spotD < 0) { v = 1.45; ink = 2; }
           }
-          if (v > 0.06) res = over(res, [clamp(v, 0, 1), ink]);
+          if (v > 0.06) res = over(res, [clamp(v, 0, 1.7), ink]);
         }
       }
     }
     const dBo = sdSeg(X, Y, cx, cy - u * 0.048, cx, cy + u * 0.052) - u * 0.009;
-    if (dBo < 0.6) { const v = glow(dBo, u * 0.003); if (v > 0.06) res = over(res, [clamp(v, 0, 1), 2]); }
+    if (dBo < 0.6) { const v = glow(dBo, u * 0.003) * 1.3; if (v > 0.06) res = over(res, [clamp(v, 0, 1.5), 2]); }
     for (let s = -1; s <= 1; s += 2) {
       const dA = sdSeg(X, Y, cx, cy - u * 0.045, cx + s * u * 0.020, cy - u * 0.075);
       if (dA < 0.5) { const v = glow(dA, 0.5) * 0.7; if (v > 0.06) res = over(res, [clamp(v, 0, 1), 1]); }
-      if (sdC(X, Y, cx + s * u * 0.020, cy - u * 0.075, u * 0.004) < 0) res = over(res, [0.9, 2]);
+      if (sdC(X, Y, cx + s * u * 0.020, cy - u * 0.075, u * 0.004) < 0) res = over(res, [1.3, 2]);
     }
     return res;
-  });
+  }, { bloom: true });
 
   add('sunrise', '#1d1027', ['#ffd9a0', '#ff9a5c'], 18, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
