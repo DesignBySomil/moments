@@ -79,23 +79,35 @@
   });
 
   add('moonsea', '#0b1233', ['#e8ecff', '#5f74c9'], 16, (x, y, t, cols, rows) => {
-    const bk = getBake('moonsea');
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     let res = 0;
+    const horizon = u * 0.62;
     const st = drift(X, Y, t, { scale: 0.5, thresh: 0.92, gain: 0.4, speed: 0.5, twinkle: 3 });
-    if (st > 0) res = [st, 0];
-    if (bk) {
-      const fw = u * 0.30, fh = u * 0.36, cy = u * 0.50;
-      const dx = X, dy = Y - cy;
-      if (Math.abs(dx) <= fw && Math.abs(dy) <= fh) {
-        const sx = dx / (fw * 2) + 0.5, sy = dy / (fh * 2) + 0.5;
-        const qx = dx / fw, qy = dy / fh, rr = qx * qx + qy * qy;
-        const eg = clamp(1 - rr * rr, 0, 1);
-        let v0 = sampleBake(bk, sx * (bk.w - 1), sy * (bk.h - 1)) * eg;
-        // sea shimmer: animate lower half
-        if (sy > 0.55) v0 *= 0.90 + 0.10 * vnoise(X * 1.2, Y * 0.4 - t * 3);
-        if (v0 > 0.04) res = over(res, [clamp(v0 * 1.15, 0, 1), sy > 0.55 ? 1 : 0]);
+    if (st > 0 && Y < horizon) res = [st, 0];
+    // crisp full moon: maria blotches, slight limb lift, tight halo
+    const cx = 0, cy = u * 0.30, R = u * 0.205;
+    const dM = sdC(X, Y, cx, cy, R);
+    if (dM < 1.2) {
+      let v;
+      if (dM <= 0) {
+        const maria = ss(0.52, 0.74, fbm(X * 0.09 + 7.3, Y * 0.09 + 2.1, 3)) * 0.40;
+        v = clamp(0.86 - maria + 0.10 * ss(0, 0.4, -dM / R), 0, 1);
+      } else {
+        v = glow(dM, u * 0.006) * 0.5;
       }
+      if (v > 0.05) res = over(res, [clamp(v, 0, 1), 0]);
+    }
+    // horizon line
+    const dh = Math.abs(Y - horizon);
+    if (dh < 1.0) res = over(res, [0.35 * (1 - dh), 1]);
+    // sea: dark field with a shimmering moon reflection column
+    if (Y > horizon) {
+      const depth = clamp((Y - horizon) / (u - horizon), 0, 1);
+      const spread = u * (0.018 + depth * 0.085);
+      const colm = Math.exp(-(X * X) / (2 * spread * spread));
+      const streak = ss(0.35, 0.75, vnoise(X * 1.6, Y * 0.30 - t * 1.8));
+      const v = colm * (0.25 + 0.75 * streak) * (1 - depth * 0.5) * 0.75;
+      if (v > 0.05) res = over(res, [clamp(v, 0, 1), 1]);
     }
     return res;
   });
@@ -126,27 +138,55 @@
   });
 
   add('dandelion', '#101a12', ['#eef5e6', '#8fbf8a'], 14, (x, y, t, cols, rows) => {
-    const bk = getBake('dandelion');
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     let res = 0;
-    if (bk) {
-      const fw = u * 0.28, fh = u * 0.36, cy = u * 0.52;
-      const dx = X, dy = Y - cy;
-      if (Math.abs(dx) <= fw && Math.abs(dy) <= fh) {
-        const sx = dx / (fw * 2) + 0.5, sy = dy / (fh * 2) + 0.5;
-        const qx = dx / fw, qy = dy / fh, rr = qx * qx + qy * qy;
-        const eg = clamp(1 - rr * rr, 0, 1);
-        const v0 = sampleBake(bk, sx * (bk.w - 1), sy * (bk.h - 1)) * eg;
-        if (v0 > 0.04) res = over(res, [clamp(v0 * 1.2, 0, 1), 0]);
+    const sway = S(t, 0.7) * u * 0.012;
+    const cx = sway, cy = u * 0.38, R = u * 0.175;
+    // stem: two-segment curve from the ground to the puff base
+    const sx0 = u * 0.09, sy0 = u * 0.99, sx1 = -u * 0.035, sy1 = u * 0.72;
+    const dStem = Math.min(sdSeg(X, Y, sx0, sy0, sx1, sy1), sdSeg(X, Y, sx1, sy1, cx, cy + R * 0.95));
+    if (dStem < 1.4) { const v = glow(dStem, u * 0.004) * 0.6; if (v > 0.05) res = over(res, [clamp(v, 0, 1), 1]); }
+    // small leaf on the lower stem
+    {
+      const la = -0.65, ca = Math.cos(la), sa = Math.sin(la);
+      const LX = X - u * 0.015, LY = Y - u * 0.86;
+      const RX = LX * ca + LY * sa, RY = -LX * sa + LY * ca;
+      const dLeaf = sdVesica(RX, RY, 0, 0, u * 0.052, u * 0.030);
+      if (dLeaf < 1.2) { const v = glow(dLeaf, u * 0.004) * 0.45; if (v > 0.05) res = over(res, [clamp(v, 0, 1), 1]); }
+    }
+    // seed clock: radiating spokes with pappus stars at the tips, dark gaps between
+    if (sdC(X, Y, cx, cy, R * 1.30) < 2.2) {
+      const N = 52;
+      for (let k = 0; k < N; k++) {
+        const a = TAU * k / N + (hash(k, 3) - 0.5) * 0.09;
+        const dx = Math.cos(a), dy = Math.sin(a);
+        const L = R * (0.86 + 0.18 * hash(k, 5));
+        const ix = cx + dx * R * 0.16, iy = cy + dy * R * 0.16;
+        const ex = cx + dx * L, ey = cy + dy * L;
+        const face = clamp(dx * -0.55 + dy * -0.84, 0, 1);
+        const tw = 0.85 + 0.15 * S(t, 1.4, hash(k, 9));
+        const d = sdSeg(X, Y, ix, iy, ex, ey);
+        if (d < 1.6) {
+          const v = glow(d, u * 0.0030) * (0.30 + 0.70 * face) * tw;
+          if (v > 0.06) res = over(res, [clamp(v, 0, 1), 0]);
+        }
+        if (sdC(X, Y, ex, ey, u * 0.012) < 1.5) {
+          const hl = u * 0.010, a1 = a + Math.PI / 4, a2 = a - Math.PI / 4;
+          const d1 = sdSeg(X, Y, ex - Math.cos(a1) * hl, ey - Math.sin(a1) * hl, ex + Math.cos(a1) * hl, ey + Math.sin(a1) * hl);
+          const d2 = sdSeg(X, Y, ex - Math.cos(a2) * hl, ey - Math.sin(a2) * hl, ex + Math.cos(a2) * hl, ey + Math.sin(a2) * hl);
+          const v = glow(Math.min(d1, d2), u * 0.0030) * (0.45 + 0.55 * face) * tw;
+          if (v > 0.06) res = over(res, [clamp(v, 0, 1), 0]);
+        }
       }
     }
-    // drifting seeds
-    for (let k = 0; k < 12; k++) {
-      const p = (t * 0.10 + hash(k, 11)) % 1;
-      const sx2 = (hash(k, 12) - 0.5) * u * 0.24 + p * u * 0.45 + S(t, 1.2, hash(k, 13)) * u * 0.05;
-      const sy2 = u * 0.34 + (hash(k, 14) - 0.5) * u * 0.2 - p * u * 0.42;
+    // seeds drifting off the clock
+    for (let k = 0; k < 10; k++) {
+      const p = (t * 0.08 + hash(k, 11)) % 1;
+      const a0 = hash(k, 15) * TAU;
+      const sx2 = cx + Math.cos(a0) * R * 0.8 + p * u * (0.28 + hash(k, 16) * 0.25) + S(t, 1.2, hash(k, 13)) * u * 0.04;
+      const sy2 = cy + Math.sin(a0) * R * 0.55 - p * u * (0.20 + hash(k, 17) * 0.30);
       const d = sdC(X, Y, sx2, sy2, u * 0.003);
-      if (d < 1.5) { const v = glow(d, 1.0) * (1 - p) * 0.9; if (v > 0.05) res = over(res, [clamp(v, 0, 1), 1]); }
+      if (d < 1.5) { const v = glow(d, 1.0) * (1 - p) * 0.9; if (v > 0.05) res = over(res, [clamp(v, 0, 1), 0]); }
     }
     return res;
   });

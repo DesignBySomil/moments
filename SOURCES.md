@@ -11,14 +11,14 @@ source image listed here. Quantized luminance only; no original pixels are redis
 | campfire | Procedural flame (code-generated, no external source) - replaces the earlier CC0 photo bake, which was unreadable at 68 columns | - | - | - |
 | candle | Candle light silhouette | Frank Morales R | CC BY-SA 2.0 | https://www.flickr.com/photos/28998097@N07/4215881289 |
 | cycle | Bicycle silhouette collage element vector | None | CC0 1.0 | https://www.rawpixel.com/image/11729426/vector-collage-cartoon-illustrations |
-| dandelion | Dandelion sunset | Holly Norval | CC BY 2.0 | https://www.flickr.com/photos/63833161@N05/14128839257 |
+| dandelion | Procedural (code-generated, no external source) - replaces the earlier CC BY photo bake, which was unreadable at 68 columns | - | - | - |
 | jellyfish | Jellyfishes | chase_elliott | CC BY 2.0 | https://www.flickr.com/photos/19746950@N00/7387318456 |
 | lantern2 | Lantern of hope | Shaheed539 | CC BY-SA 2.0 | https://commons.wikimedia.org/w/index.php?curid=191748130 |
 | leaves | patina | jenny downing | CC BY 2.0 | https://www.flickr.com/photos/7941044@N06/5221488542 |
 | lighthouse | Evening, Barnegat Lighthouse | Tony Fischer Photography | CC BY 2.0 | https://www.flickr.com/photos/22714323@N06/4707900527 |
-| moonsea | Stars over Sea | grayeme | CC BY 2.0 | https://www.flickr.com/photos/14534290@N04/6772936663 |
+| moonsea | Procedural (code-generated, no external source) - replaces the earlier CC BY photo bake, which was unreadable at 68 columns | - | - | - |
 | pendulum | Foucault Pendulum, Museum History Technology | None | CC0 1.0 | https://www.rawpixel.com/image/8846787/photo-image-art-vintage-public-domain |
-| sprout | The love of gardening is a seed that once sown never dies. -Gertrude Jekyll | katerha | CC BY 2.0 | https://www.flickr.com/photos/8489692@N03/4612232633 |
+| sprout | Procedural (code-generated, no external source) - replaces the earlier CC BY photo bake, which was unreadable at 68 columns | - | - | - |
 | swing | Swinging towards Breiviken | joiseyshowaa | CC BY-SA 2.0 | https://www.flickr.com/photos/30201239@N00/28919454948 |
 | train | The Scots Guardsman | TrotterFechan | CC BY 2.0 | https://www.flickr.com/photos/89786933@N02/33429140366 |
 | wave | Dare to reach out your hand into the darkness, to pull another hand into the light. ~Norman B. Rice | Nick Kenrick.. | CC BY 2.0 | https://www.flickr.com/photos/33363480@N05/15735643892 |

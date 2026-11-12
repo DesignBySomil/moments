@@ -145,21 +145,42 @@
   });
 
   add('sprout', '#101a10', ['#a8e88a', '#e8f5d8'], 16, (x, y, t, cols, rows) => {
-    const bk = getBake('sprout');
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     let res = 0;
-    if (bk) {
-      const br = 1 + 0.02 * S(t, 0.9);
-      const fw = u * 0.30 * br, fh = u * 0.32 * br, cy = u * 0.52;
-      const dx = X, dy = Y - cy;
-      if (Math.abs(dx) <= fw && Math.abs(dy) <= fh) {
-        const sx = dx / (fw * 2) + 0.5, sy = dy / (fh * 2) + 0.5;
-        const qx = dx / fw, qy = dy / fh, rr = qx * qx + qy * qy;
-        const eg = clamp(1 - rr * rr, 0, 1);
-        const v0 = sampleBake(bk, sx * (bk.w - 1), sy * (bk.h - 1)) * eg;
-        if (v0 > 0.04) res = over(res, [clamp(v0 * 1.2, 0, 1), v0 > 0.6 ? 1 : 0]);
+    // soil mound
+    const dMound = sdE(X, Y, 0, u * 1.04, u * 0.34, u * 0.20);
+    if (dMound < 1.2) {
+      const v = dMound <= 0 ? 0.20 + 0.14 * fbm(X * 1.1, Y * 1.1, 2) : glow(dMound, 0.8) * 0.18;
+      if (v > 0.05) res = over(res, [clamp(v, 0, 1), 0]);
+    }
+    // stem with a gentle sway
+    const sway = S(t, 0.9) * u * 0.012;
+    const top = u * 0.58;
+    const dStem = Math.min(sdSeg(X, Y, 0, u * 0.88, sway * 0.4, u * 0.74), sdSeg(X, Y, sway * 0.4, u * 0.74, sway, top));
+    if (dStem < 1.4) { const v = glow(dStem, u * 0.005) * 0.85; if (v > 0.05) res = over(res, [clamp(v, 0, 1), 1]); }
+    // two slender cotyledon leaves as bright rims with dark interiors, staggered in a V
+    const leafDefs = [[1, 0, 0.75, -0.66], [-1, 0.075, 0.72, -0.69]];
+    for (let k = 0; k < 2; k++) {
+      const dir = leafDefs[k][0];
+      const wig = 0.04 * S(t, 1.3, k * 2.2);
+      let ux = dir * (leafDefs[k][2] + wig), uy = leafDefs[k][3];
+      const ul = Math.hypot(ux, uy); ux /= ul; uy /= ul;
+      const axX = sway * 0.7, axY = top + leafDefs[k][1] * u;
+      const rL = u * 0.085, dL = u * 0.070;
+      const hl = Math.sqrt(rL * rL - dL * dL) * 1.0;
+      const cx2 = axX + ux * hl, cy2 = axY + uy * hl;
+      const RY = (X - cx2) * ux + (Y - cy2) * uy, RX = -(X - cx2) * uy + (Y - cy2) * ux;
+      const dLf = sdVesica(RX, RY, 0, 0, rL, dL);
+      if (dLf < 1.8) {
+        const rim = Math.exp(-Math.abs(dLf) / (u * 0.0055));
+        const fillv = dLf < 0 ? 0.14 + 0.08 * ss(0.5, -0.9, dLf) : 0;
+        const v = rim * 0.95 + fillv;
+        if (v > 0.06) res = over(res, [clamp(v, 0, 1), 1]);
       }
     }
+    // dew specks
+    const g = drift(X, Y, t, { gain: 0.14, thresh: 0.93, speed: 1.5 });
+    if (g > 0) res = over(res, [g, 1]);
     return res;
   });
 })(typeof window !== 'undefined' ? window : globalThis);
