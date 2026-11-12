@@ -76,18 +76,17 @@
     const sy = hor - u * 0.02 - rise * u * 0.22, sx = 0, sr = u * 0.13;
     let res = 0;
     const skyT = clamp(Y / hor, 0, 1);
-    const band = fbm(X * 0.05, Y * 0.11 + 8, 3);
-    const skyV = (0.28 - skyT * 0.22) * (0.7 + 0.5 * band) * (0.5 + rise * 0.8);
-    if (skyV > 0.5 && Y < hor) res = [clamp(skyV, 0, 0.45), 1];
+    const skyV = 0.15 * ss(0.55, 1.0, skyT) * (0.45 + rise * 0.75);
+    if (skyV > 0.03 && Y < hor) res = [clamp(skyV, 0, 0.15), 1];
     const sd = sdC(X, Y, sx, sy, sr);
     if (Y < hor + 1) {
-      if (sd < 0) res = over(res, [0.85 + 0.15 * clamp(-sd / (sr * 0.5), 0, 1), 0]);
-      else { const g = glow(sd, u * 0.055) * (0.4 + rise * 0.4) * (0.6 + 0.8 * fbm(X * 0.5, Y * 0.5 + 4, 2)); if (g > 0.16) res = over(res, [clamp(g, 0, 0.85), 0, 0.9]); }
+      if (sd < 0) res = over(res, [0.98 + 0.02 * clamp(-sd / (sr * 0.4), 0, 1), 0]);
+      else { const g = glow(sd, u * 0.011) * (0.30 + rise * 0.35); if (g > 0.05) res = over(res, [clamp(g, 0, 0.8), 0, 0.9]); }
     }
     if (Y >= hor) {
       const depth = ss(0, u * 0.2, Y - hor);
       const tex = fbm(X * 0.2 + t * 1.5, Y * 0.35, 3);
-      let v = 0.10 + 0.30 * depth + 0.16 * (tex - 0.5);
+      let v = 0.05 + 0.12 * depth + 0.06 * (tex - 0.5);
       const colW = u * 0.05 * (1 + depth * 2.5);
       const shim = vnoise(X * 1.6, Y * 0.4 - t * 5);
       if (Math.abs(X - sx) < colW && shim > 0.30) v = Math.max(v, (0.45 + 0.45 * ss(0.3, 0.75, shim)) * (1 - depth * 0.4));
@@ -128,46 +127,57 @@
 
   add('windmill', '#20365c', ['#f0e8d8', '#a8b8d0'], 14, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
-    const gy = u * 0.78, tx = 0, hubY = u * 0.34, bladeL = u * 0.21;
+    const gy = u * 0.82, tx = 0, hubY = u * 0.34, bladeL = u * 0.26;
     let res = 0;
     const cl = fbm(X * 0.10 + t * 1.8, Y * 0.2, 4);
     if (cl > 0.58 && Y < u * 0.5) res = [ss(0.58, 0.8, cl) * 0.3, 1];
-    if (Y > gy - 2) {
-      const g2 = 0.35 + 0.2 * fbm(X * 0.4, Y * 0.5, 2) + (vnoise(X * 2, Y * 2) > 0.88 ? 0.3 : 0);
-      if (Y > gy) res = over(res, [g2, 1]);
+    if (Y > gy) {
+      const g2 = 0.18 + 0.12 * fbm(X * 0.4, Y * 0.5, 2) + (vnoise(X * 2, Y * 2) > 0.90 ? 0.22 : 0);
+      res = over(res, [g2, 1]);
     }
-    if (Math.abs(X - tx) < u * 0.3 && Y > hubY - bladeL - 3 && Y < gy + 2) {
-      const sdMill = (px, py) => {
-        const taper = u * 0.045 - (py - hubY) / (gy - hubY) * u * 0.020;
-        let d = sdBox(px, py, tx, (hubY + gy) / 2, taper, (gy - hubY) / 2);
-        d = Math.min(d, sdE(px, py, tx, hubY - u * 0.01, u * 0.045, u * 0.028));
-        d = Math.min(d, sdBox(px, py, tx, hubY - u * 0.045, u * 0.05, u * 0.02));
+    // tower: fat tapered stone body + cap, shaded, with door and window gaps
+    if (Math.abs(X - tx) < u * 0.16 && Y > hubY - u * 0.14 && Y < gy + 2) {
+      const halfW = (py) => u * 0.075 - (py - hubY) / (gy - hubY) * u * 0.030;
+      const sdTower = (px, py) => {
+        let d = sdBox(px, py, tx, (hubY + gy) / 2, halfW(py), (gy - hubY) / 2);
+        d = Math.min(d, sdE(px, py, tx, hubY - u * 0.005, u * 0.058, u * 0.034));
+        d = Math.min(d, sdBox(px, py, tx, hubY - u * 0.058, u * 0.042, u * 0.024));
+        d = Math.min(d, sdSeg(px, py, tx, hubY - u * 0.080, tx, hubY - u * 0.100) - u * 0.004);
         return d;
       };
-      const sh = shade(sdMill, X, Y, -0.55, -0.8);
-      if (sh > 0) res = over(res, [sh, 0]);
-      const rot = TAU * t * 0.12;
-      const sdBlades = (px, py) => {
-        let d = 1e9;
+      const dT = sdTower(X, Y);
+      const m = ss(0.9, -0.4, dT);
+      if (m > 0) {
+        const hw = Math.max(halfW(Y), u * 0.030);
+        let v = (1.02 - 0.62 * ss(-hw, hw, X - tx)) * m;
+        v += 0.12 * ss(u * 0.012, 0, Math.abs(X - (tx - hw * 0.92))) * m;
+        if (sdE(X, Y, tx, gy - u * 0.008, u * 0.016, u * 0.026) < 0) v *= 0.15;
+        else if (sdBox(X, Y, tx, hubY + (gy - hubY) * 0.45, u * 0.009, u * 0.012) < 0) v *= 0.25;
+        res = over(res, [clamp(v, 0, 1), 0]);
+      }
+    }
+    // sails: 4 lattice panels, cloth on the trailing side of each spar
+    const rot = TAU * t * 0.12;
+    {
+      const rx2 = X - tx, ry2 = Y - hubY;
+      if (Math.hypot(rx2, ry2) < bladeL * 1.25) {
         for (let k = 0; k < 4; k++) {
           const a = rot + k * TAU / 4;
           const dx = Math.cos(a), dy = Math.sin(a);
-          const ex = tx + dx * bladeL, ey = hubY + dy * bladeL;
-          const rx = px - tx, ry = py - hubY;
-          const proj = clamp((rx * dx + ry * dy) / bladeL, 0, 1);
-          const sailW = u * 0.004 + u * 0.026 * proj;
-          const lead = sdSeg(px, py, tx, hubY, ex, ey) - sailW;
-          const trailEdge = sdSeg(px, py, tx - dy * proj * u * 0.05, hubY + dx * proj * u * 0.05, ex - dy * u * 0.055, ey + dx * u * 0.055) - sailW * 0.9;
-          d = Math.min(d, Math.min(lead, trailEdge));
+          const s = rx2 * dx + ry2 * dy;
+          const p = -rx2 * dy + ry2 * dx;
+          if (s < u * 0.008 || s > bladeL) continue;
+          const wSail = u * (0.012 + 0.032 * s / bladeL);
+          if (p > 0 && p < wSail && s > bladeL * 0.15) {
+            const rung = 0.82 + 0.18 * Math.abs(Math.sin(s * 2.2));
+            const edge = ss(0, u * 0.005, p) * ss(wSail, wSail - u * 0.005, p);
+            const v = (1.0 - 0.35 * s / bladeL) * (0.82 + 0.18 * rung) * (0.75 + 0.25 * edge);
+            res = over(res, [clamp(v, 0, 1), 0]);
+          }
+          if (Math.abs(p) < u * 0.005) res = over(res, [0.95, 0]);
         }
-        return d;
-      };
-      const dB = sdBlades(X, Y);
-      if (dB < 0.8) {
-        const sh2 = shade(sdBlades, X, Y, -0.5, -0.8);
-        if (sh2 > 0) res = over(res, [sh2, 0]);
+        if (sdC(X, Y, tx, hubY, u * 0.014) < 0) res = over(res, [1, 0]);
       }
-      if (sdC(X, Y, tx, hubY, u * 0.012) < 0) res = over(res, [0.9, 0]);
     }
     return res;
   });

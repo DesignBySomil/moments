@@ -137,13 +137,20 @@
       const dE = sdE(X, Y, bx, by, rx, ry);
       const sh = shade(sdBal, X, Y, -0.55, -0.75);
       if (sh > 0) {
-        let ink = 0, boost = 1;
+        let ink = 0, v = sh;
         if (dE < 0) {
-          const bandA = Math.atan2(Y - by, (X - bx) * (ry / rx) * 1.0);
-          ink = Math.sin(bandA * 4 + TAU * 0) > 0 ? 1 : 0;
-          boost = 0.95;
+          // strong directional contrast + specular hot spot + alternating gore panels
+          const q = ((X - bx) * 0.66 + (Y - by) * 0.75) / rx;
+          v *= clamp(1.10 - 0.70 * ss(-0.9, 1.0, q), 0.35, 1.10);
+          v += 0.55 * glow(sdE(X, Y, bx - rx * 0.38, by - ry * 0.38, rx * 0.26, ry * 0.20), u * 0.018);
+          const bandA = Math.atan2((X - bx) * (ry / rx), (Y - by));
+          if (Math.sin(bandA * 4) > 0) { ink = 1; v *= 0.80; }
+        } else {
+          // basket and rigging below the envelope: darker red, woven
+          ink = 1;
+          v *= 0.70 * (0.85 + 0.15 * Math.sin(X * 2.4) * Math.sin(Y * 2.4));
         }
-        res = over(res, [clamp(sh * boost, 0, 1), ink]);
+        res = over(res, [clamp(v, 0, 1), ink]);
       }
     }
     return res;
@@ -213,10 +220,13 @@
       const sdLower = (qx, qy) => tri(qx, qy, L, 0, -L * 0.42, 0, -L, L * 0.38);
       const dU = sdUpper(LX, LY), dL = sdLower(LX, LY);
       if (dU < 0.8 || dL < 0.8) {
-        const shU = shade(sdUpper, LX, LY, -0.45, -0.85) * 1.35;
-        const shL = shade(sdLower, LX, LY, -0.45, -0.85) * 0.85;
-        if (dU <= dL && shU > 0) res = over(res, [shU, 0]);
-        else if (shL > 0) res = over(res, [shL, 1]);
+        const len = 0.85 + 0.15 * ss(-L, L, LX);
+        let shU = shade(sdUpper, LX, LY, -0.45, -0.85) * 1.5 * len;
+        let shL = shade(sdLower, LX, LY, -0.45, -0.85) * 0.70 * len;
+        // dark seam along the fold between the two facets
+        if (Math.abs(LY) < u * 0.0022 && LX < L * 0.9 && LX > -L * 0.45) { shU *= 0.45; shL *= 0.45; }
+        if (dU <= dL && shU > 0) res = over(res, [clamp(shU, 0, 1), 0]);
+        else if (shL > 0) res = over(res, [clamp(shL, 0, 1), 1]);
       }
     }
     const tr = vnoise(X * 0.8 + 60, Y * 2.2 - t * 8);

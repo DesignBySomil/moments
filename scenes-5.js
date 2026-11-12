@@ -6,24 +6,36 @@
 
   add('pendulum', '#101018', ['#d8d4e8', '#8a86a0'], 8, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
-    const px0 = 0, py0 = u * 0.14, L = u * 0.50, ang = S(t, 1) * 0.42;
+    const px0 = 0, py0 = u * 0.12, L = u * 0.52, ang = S(t, 1) * 0.42;
     const bx = px0 + Math.sin(ang) * L, by = py0 + Math.cos(ang) * L;
     let res = 0;
     const trailA = Math.atan2(X - px0, Y - py0);
     const trailR = Math.hypot(X - px0, Y - py0);
-    if (Math.abs(trailR - L) < u * 0.004 && Math.abs(trailA) < 0.45 && Y > py0) res = over(res, [0.22, 1]);
-    if (Math.abs(X) < u * 0.30 && Y > py0 - u * 0.1 && Y < by + u * 0.12) {
-      const gbx = px0 + Math.sin(ang * 0.55) * L, gby = py0 + Math.cos(ang * 0.55) * L;
-      const dg = sdC(X, Y, gbx, gby, u * 0.068);
-      if (dg < 0) res = over(res, [0.22, 0]);
-      const sdPend = (qx, qy) => Math.min(
-        sdSeg(qx, qy, px0, py0, bx, by) - u * 0.013,
-        sdC(qx, qy, bx, by, u * 0.068),
-        sdBox(qx, qy, px0, py0 - u * 0.014, u * 0.06, u * 0.014));
-      const sh = shade(sdPend, X, Y, -0.55, -0.8);
-      if (sh > 0) res = over(res, [sh, 0]);
-      const glint = glow(sdC(X, Y, bx - u * 0.024, by - u * 0.024, u * 0.010), 1.2);
-      if (sdC(X, Y, bx, by, u * 0.068) < 0 && glint > 0.1) res = over(res, [clamp(0.5 + glint * 0.5, 0, 1), 0]);
+    if (Math.abs(trailR - L) < u * 0.0035 && Math.abs(trailA) < 0.45 && Y > py0) res = over(res, [0.20, 1]);
+    const gbx = px0 + Math.sin(ang * 0.55) * L, gby = py0 + Math.cos(ang * 0.55) * L;
+    if (sdC(X, Y, gbx, gby, u * 0.075) < 0) res = over(res, [0.18, 0]);
+    const dBr = sdBox(X, Y, px0, py0 - u * 0.016, u * 0.055, u * 0.016);
+    if (dBr < 0.8) {
+      const m = ss(0.8, -0.5, dBr);
+      const v = (0.95 - 0.5 * ss(-u * 0.055, u * 0.055, X - px0)) * m;
+      if (v > 0.05) res = over(res, [clamp(v, 0, 1), 0]);
+    }
+    const rodXatY = px0 + Math.sin(ang) * (Y - py0);
+    const along = (Y - py0) / L;
+    const dRod = sdSeg(X, Y, px0, py0, bx, by) - u * 0.015;
+    if (dRod < 0.7 && along > 0 && along < 1) {
+      const m = ss(0.7, -0.4, dRod);
+      const v = (0.42 + 0.58 * ss(u * 0.017, -u * 0.013, X - rodXatY)) * m;
+      if (v > 0.05) res = over(res, [clamp(v, 0, 1), 0]);
+    }
+    const rB = u * 0.078;
+    const dBob = sdC(X, Y, bx, by, rB);
+    if (dBob < 0.9) {
+      const m = ss(0.9, -0.6, dBob);
+      const q = ((X - bx) * 0.62 + (Y - by) * 0.72) / rB;
+      let v = (1.05 - 0.85 * ss(-0.9, 1.0, q)) * m;
+      v += 0.65 * glow(sdC(X, Y, bx - rB * 0.34, by - rB * 0.36, rB * 0.18), u * 0.012) * m;
+      if (v > 0.05) res = over(res, [clamp(v, 0, 1), 0]);
     }
     return res;
   });
@@ -147,39 +159,48 @@
   add('sprout', '#101a10', ['#a8e88a', '#e8f5d8'], 16, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     let res = 0;
-    // soil mound
-    const dMound = sdE(X, Y, 0, u * 1.04, u * 0.34, u * 0.20);
-    if (dMound < 1.2) {
-      const v = dMound <= 0 ? 0.20 + 0.14 * fbm(X * 1.1, Y * 1.1, 2) : glow(dMound, 0.8) * 0.18;
-      if (v > 0.05) res = over(res, [clamp(v, 0, 1), 0]);
-    }
-    // stem with a gentle sway
     const sway = S(t, 0.9) * u * 0.012;
-    const top = u * 0.58;
-    const dStem = Math.min(sdSeg(X, Y, 0, u * 0.88, sway * 0.4, u * 0.74), sdSeg(X, Y, sway * 0.4, u * 0.74, sway, top));
-    if (dStem < 1.4) { const v = glow(dStem, u * 0.005) * 0.85; if (v > 0.05) res = over(res, [clamp(v, 0, 1), 1]); }
-    // two slender cotyledon leaves as bright rims with dark interiors, staggered in a V
-    const leafDefs = [[1, 0, 0.75, -0.66], [-1, 0.075, 0.72, -0.69]];
-    for (let k = 0; k < 2; k++) {
-      const dir = leafDefs[k][0];
-      const wig = 0.04 * S(t, 1.3, k * 2.2);
-      let ux = dir * (leafDefs[k][2] + wig), uy = leafDefs[k][3];
-      const ul = Math.hypot(ux, uy); ux /= ul; uy /= ul;
-      const axX = sway * 0.7, axY = top + leafDefs[k][1] * u;
-      const rL = u * 0.085, dL = u * 0.070;
-      const hl = Math.sqrt(rL * rL - dL * dL) * 1.0;
-      const cx2 = axX + ux * hl, cy2 = axY + uy * hl;
-      const RY = (X - cx2) * ux + (Y - cy2) * uy, RX = -(X - cx2) * uy + (Y - cy2) * ux;
-      const dLf = sdVesica(RX, RY, 0, 0, rL, dL);
-      if (dLf < 1.8) {
-        const rim = Math.exp(-Math.abs(dLf) / (u * 0.0055));
-        const fillv = dLf < 0 ? 0.14 + 0.08 * ss(0.5, -0.9, dLf) : 0;
-        const v = rim * 0.95 + fillv;
-        if (v > 0.06) res = over(res, [clamp(v, 0, 1), 1]);
-      }
+    const apexX = sway, apexY = u * 0.47;
+    // soil mound: small, dark, lit crest
+    const dMound = sdE(X, Y, 0, u * 1.07, u * 0.22, u * 0.13);
+    if (dMound < 0) {
+      const crest = ss(u * 0.10, 0, Y - u * 0.94);
+      res = over(res, [0.10 + 0.30 * crest + 0.07 * fbm(X * 1.6, Y * 1.6, 2), 0]);
     }
+    // stem: tapered two-segment column, shaded
+    const sdStem = (px, py) => Math.min(
+      sdSeg(px, py, 0, u * 0.94, sway * 0.4, u * 0.72) - u * 0.019,
+      sdSeg(px, py, sway * 0.4, u * 0.72, sway, apexY) - u * 0.013);
+    if (Math.abs(X) < u * 0.08 && Y > apexY - 3 && Y < u * 0.97) {
+      const sh = shade(sdStem, X, Y, -0.6, -0.7);
+      if (sh > 0) res = over(res, [clamp(sh * 1.5, 0, 1), 0]);
+    }
+    // plump shaded vesica leaves with a midrib crease
+    const drawLeaf = (bx2, by2, ang, b, w, boost, ink) => {
+      const dd = (b * b - w * w) / (2 * w), rr = w + dd;
+      const ux2 = Math.sin(ang), uy2 = -Math.cos(ang);
+      const cx2 = bx2 + ux2 * b, cy2 = by2 + uy2 * b;
+      const RY = (X - cx2) * ux2 + (Y - cy2) * uy2;
+      const RX = -(X - cx2) * uy2 + (Y - cy2) * ux2;
+      if (Math.abs(RY) > b * 1.7 || Math.abs(RX) > w * 2.0) return;
+      const sdLf = (px, py) => {
+        const qy = (px - cx2) * ux2 + (py - cy2) * uy2;
+        const qx = -(px - cx2) * uy2 + (py - cy2) * ux2;
+        return sdVesica(qx, qy, 0, 0, rr, dd);
+      };
+      const sh = shade(sdLf, X, Y, -0.62, -0.72);
+      if (sh > 0) {
+        let v = sh * boost;
+        if (Math.abs(RX) < u * 0.0028) v *= 0.52;
+        res = over(res, [clamp(v, 0, 1), ink]);
+      }
+    };
+    const wig = 0.025 * S(t, 1.3), wig2 = 0.03 * S(t, 1.3, 2.2);
+    // cotyledons: slender ovals spread wide, dark wedge between them
+    drawLeaf(apexX, apexY + u * 0.015, 0.98 + wig, u * 0.085, u * 0.032, 1.38, 1);
+    drawLeaf(apexX, apexY + u * 0.060, -1.04 + wig2, u * 0.079, u * 0.030, 1.38, 1);
     // dew specks
-    const g = drift(X, Y, t, { gain: 0.14, thresh: 0.93, speed: 1.5 });
+    const g = drift(X, Y, t, { gain: 0.12, thresh: 0.94, speed: 1.2 });
     if (g > 0) res = over(res, [g, 1]);
     return res;
   });

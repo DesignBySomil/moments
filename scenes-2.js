@@ -35,13 +35,47 @@
   add('campfire', '#120b06', ['#ffb04a', '#c9b8a8'], 9, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     let res = 0;
-    // procedural flame: 3 nested teardrop layers, independent sway, hot core
-    const base = u * 0.74;
+    const base = u * 0.72;
+    // faint warm glow hugging the fire base
+    if (Y > base - u * 0.02 && Math.abs(X) < u * 0.16) {
+      const gl = glow(sdE(X, Y, 0, base + u * 0.020, u * 0.13, u * 0.026), u * 0.022) * 0.16;
+      if (gl > 0.05) res = [gl, 0];
+    }
+    // ember bed: hot mottled ellipse under the logs
+    const dEmb = sdE(X, Y, 0, base + u * 0.006, u * 0.075, u * 0.015);
+    if (dEmb < 0) {
+      const v = (0.45 + 0.55 * fbm(X * 2.4, Y * 2.4 - t * 1.5, 2)) * (0.7 + 0.3 * S(t, 3.1));
+      res = over(res, [clamp(v, 0, 1), 0]);
+    }
+    // crossed logs: shaded capsules, lit from above by the fire, direct priority over embers
+    const logs = [
+      [-u * 0.105, base + u * 0.012, u * 0.068, base - u * 0.028],
+      [u * 0.105, base + u * 0.012, -u * 0.068, base - u * 0.028],
+      [-u * 0.088, base + u * 0.024, u * 0.088, base + u * 0.020]];
+    for (let k = 0; k < 3; k++) {
+      const [ax, ay, bx2, by2] = logs[k];
+      const r = u * 0.023;
+      const dL = sdSeg(X, Y, ax, ay, bx2, by2) - r;
+      if (dL < 0.6) {
+        const m = ss(0.6, -0.5, dL);
+        if (m > 0) {
+          const L2 = ((bx2 - ax) * X + (by2 - ay) * Y - ((bx2 - ax) * ax + (by2 - ay) * ay));
+          const len2 = (bx2 - ax) * (bx2 - ax) + (by2 - ay) * (by2 - ay);
+          const s = clamp(L2 / len2, 0, 1);
+          const axisY = ay + (by2 - ay) * s;
+          const top = ss(r * 1.1, -r * 0.9, Y - axisY);
+          const bark = 0.86 + 0.14 * Math.sin(s * 21 + k * 2.4);
+          const v = (0.30 + 0.70 * top) * bark * m * (k === 2 ? 0.9 : 1);
+          res = [clamp(v, 0, 1), 1];
+        }
+      }
+    }
+    // flame: 3 nested teardrop layers, independent sway, hot core
     const layers = [
-      [u * 0.150, u * 0.46, 0.42, 2.1],
-      [u * 0.105, u * 0.36, 0.68, 4.7],
-      [u * 0.058, u * 0.24, 1.00, 8.3]];
-    if (Y < base + 2 && Y > base - u * 0.5 && Math.abs(X) < u * 0.35) {
+      [u * 0.170, u * 0.50, 0.42, 2.1],
+      [u * 0.120, u * 0.40, 0.68, 4.7],
+      [u * 0.065, u * 0.27, 1.00, 8.3]];
+    if (Y < base + 2 && Y > base - u * 0.55 && Math.abs(X) < u * 0.38) {
       for (let i = 0; i < 3; i++) {
         const [w, h, bright, ph] = layers[i];
         const ty = (base - Y) / h;
@@ -52,26 +86,23 @@
         const v = (1 - d * d) * bright * (0.86 + 0.14 * S(t, 5.2, ph));
         if (v > 0.10) res = over(res, [clamp(v, 0, 1), 0]);
       }
-      // twin side wisps
       for (let k = 0; k < 2; k++) {
         const dir = k === 0 ? -1 : 1;
-        const ty = (base - Y) / (u * 0.22);
+        const ty = (base - Y) / (u * 0.24);
         if (ty <= 0 || ty >= 1) continue;
         const sway = S(t, 3.4, k * 5.1) * ty * u * 0.03;
-        const cx = dir * u * 0.115 + sway;
-        const wshape = u * 0.030 * Math.sin(Math.PI * ty);
+        const cx = dir * u * 0.125 + sway;
+        const wshape = u * 0.032 * Math.sin(Math.PI * ty);
         const d = Math.abs(X - cx) / Math.max(wshape, 0.001);
         const v = (1 - d * d) * 0.3 * (0.7 + 0.3 * S(t, 4.4, k * 3.3));
         if (v > 0.12) res = over(res, [clamp(v, 0, 1), 0]);
       }
-      // log base
-      const dl = sdE(X, Y, 0, base + u * 0.006, u * 0.16, u * 0.022);
-      if (dl < 0) res = over(res, [0.30 + 0.1 * fbm(X * 1.4, Y * 1.4, 2), 0]);
     }
+    // rising sparks
     for (let k = 0; k < 6; k++) {
       const p = (t * 0.9 + hash(k, 1)) % 1;
       const ex = (hash(k, 2) - 0.5) * u * 0.2 + S(t, 2, hash(k, 3)) * u * 0.05;
-      const ey = u * 0.52 - p * u * 0.38;
+      const ey = u * 0.50 - p * u * 0.38;
       const d = sdC(X, Y, ex, ey, u * 0.004);
       if (d < 1.2) { const v = glow(d, 0.8) * (1 - p) * 0.9; if (v > 0.06) res = over(res, [v, 0]); }
     }

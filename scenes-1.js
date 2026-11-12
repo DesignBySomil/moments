@@ -40,13 +40,13 @@
     const X = (x - cols / 2) / 1.06, Y = y;
     const bobY = S(t, 2) * rows * 0.006, bx = -cols * 0.05, wl = rows * 0.56 + bobY;
     let res = 0;
-    const seaTop = rows * 0.62;
+    const seaTop = rows * 0.66;
     if (Y > seaTop - rows * 0.05) {
       const edge = seaTop + rows * 0.010 * S(t, 1, X * 0.045) + rows * 0.006 * S(t, 2, X * 0.11);
       if (Y > edge) {
         const depth = ss(0, rows * 0.15, Y - edge);
         const tex = fbm(X * 0.16 + t * 2.4, Y * 0.30 - t * 1.1, 3);
-        res = [clamp(0.10 + 0.62 * depth + 0.28 * (tex - 0.5), 0, 1), 1];
+        res = [clamp(0.05 + 0.26 * depth + 0.12 * (tex - 0.5), 0, 1), 1];
       }
     }
     if (Y > rows * 0.30 && Y < rows * 0.70 && Math.abs(X - bx) < rows * 0.34) {
@@ -77,23 +77,50 @@
     let res = 0;
     const cl = clouds(X, Y, t, 0.15, 0.58, 0.32);
     if (cl > 0) res = [cl, 1];
-    for (let k = 0; k < 6; k++) {
-      const span = u * (k === 0 ? 0.24 : k < 3 ? 0.10 + hash(k, 21) * 0.03 : 0.05 + hash(k, 21) * 0.02);
-      const gx = (k === 0 ? -u * 0.03 : (hash(k, 22) - 0.5) * u * 0.9) + S(t, 0.22, hash(k, 23) * 9) * u * (k === 0 ? 0.03 : 0.16);
-      const gy = (k === 0 ? u * 0.34 : u * (0.14 + hash(k, 24) * 0.26)) + S(t, 0.8, hash(k, 25) * 9) * u * 0.012;
-      const wthick = u * (k === 0 ? 0.016 : 0.009);
+    // distant gulls: small dim chevrons
+    for (let k = 0; k < 3; k++) {
+      const span = u * (0.045 + hash(k, 21) * 0.02);
+      const gx = (hash(k, 22) - 0.5) * u * 1.1 + S(t, 0.22, hash(k, 23) * 9) * u * 0.14;
+      const gy = u * (0.12 + hash(k, 24) * 0.22) + S(t, 0.8, hash(k, 25) * 9) * u * 0.012;
       if (Math.abs(X - gx) > span * 1.4 || Math.abs(Y - gy) > span * 0.9) continue;
-      const flap = S(t, 2.6, hash(k, 26) * 9);
-      const tipY = gy - flap * span * 0.55;
-      let d = sdSeg(X, Y, gx - span, tipY, gx, gy + span * 0.06) - wthick;
-      d = Math.min(d, sdSeg(X, Y, gx, gy + span * 0.06, gx + span, tipY) - wthick);
-      d = Math.min(d, sdE(X, Y, gx, gy + span * 0.03, span * 0.10, span * 0.06));
-      const sh = shade((a, b) => {
-        let dd = sdSeg(a, b, gx - span, tipY, gx, gy + span * 0.06) - wthick * 0.6;
-        dd = Math.min(dd, sdSeg(a, b, gx, gy + span * 0.06, gx + span, tipY) - wthick * 0.6);
-        return Math.min(dd, sdE(a, b, gx, gy + span * 0.03, span * 0.10, span * 0.06));
-      }, X, Y, -0.4, -0.8);
-      if (sh > 0.02) res = over(res, [clamp(sh * 1.35, 0, 1) * (k === 0 ? 1 : 0.55 + 0.3 * (k < 3)), 0]);
+      const flap0 = S(t, 2.6, hash(k, 26) * 9);
+      const tipY = gy - flap0 * span * 0.55;
+      const d = Math.min(sdSeg(X, Y, gx - span, tipY, gx, gy + span * 0.05), sdSeg(X, Y, gx, gy + span * 0.05, gx + span, tipY)) - u * 0.006;
+      if (d < 0.8) { const v = glow(d, u * 0.004) * 0.55; if (v > 0.06) res = over(res, [clamp(v, 0, 1), 0]); }
+    }
+    // hero bird: plump body, head, beak, layered flapping wings
+    const bx = -u * 0.02 + S(t, 0.3) * u * 0.02, by = u * 0.42 + S(t, 1.1) * u * 0.015;
+    const flap = S(t, 2.2) * 0.5;
+    if (Math.abs(X - bx) < u * 0.45 && Math.abs(Y - by) < u * 0.42) {
+      for (const dir of [-1, 1]) {
+        const shx = bx + dir * u * 0.018, shy = by - u * 0.012;
+        for (let j = 0; j < 3; j++) {
+          const L = u * (0.165 - j * 0.026), w = u * (0.015 - j * 0.002);
+          const th = dir > 0 ? (-0.50 - j * 0.38 + flap * (0.9 - j * 0.15)) : (Math.PI + 0.50 + j * 0.38 - flap * (0.9 - j * 0.15));
+          const ex = shx + Math.cos(th) * L, ey = shy + Math.sin(th) * L;
+          const d = sdSeg(X, Y, shx, shy, ex, ey) - w;
+          if (d < 0.7) {
+            const m = ss(0.7, -0.4, d);
+            const s = clamp(((X - shx) * Math.cos(th) + (Y - shy) * Math.sin(th)) / L, 0, 1);
+            const v = (0.88 - j * 0.20 - s * 0.34) * m;
+            if (v > 0.05) res = over(res, [clamp(v, 0, 1), 0]);
+          }
+        }
+      }
+      const dTail = sdSeg(X, Y, bx - u * 0.045, by + u * 0.002, bx - u * 0.088, by + u * 0.008) - u * 0.012;
+      if (dTail < 0.5) { const v = ss(0.5, -0.4, dTail) * 0.7; if (v > 0.05) res = over(res, [v, 0]); }
+      const dBody = sdE(X, Y, bx, by, u * 0.052, u * 0.019);
+      if (dBody < 0.8) {
+        const m = ss(0.8, -0.5, dBody);
+        const v = (0.92 + 0.30 * ss(u * 0.02, -u * 0.02, Y - by)) * m;
+        res = over(res, [clamp(v, 0, 1), 0]);
+      }
+      const hx = bx + u * 0.048, hy = by - u * 0.014;
+      const dHead = sdC(X, Y, hx, hy, u * 0.017);
+      if (dHead < 0.6) { const v = ss(0.6, -0.4, dHead) * (0.8 + 0.3 * ss(u * 0.012, -u * 0.012, Y - hy)); if (v > 0.05) res = over(res, [clamp(v, 0, 1), 0]); }
+      const dBeak = sdSeg(X, Y, hx + u * 0.012, hy, hx + u * 0.030, hy + u * 0.004) - u * 0.004;
+      if (dBeak < 0.5) { const v = ss(0.5, -0.3, dBeak) * 0.9; if (v > 0.05) res = over(res, [v, 1]); }
+      if (sdC(X, Y, hx + u * 0.004, hy - u * 0.004, u * 0.003) < 0) res = [0.1, 1];
     }
     return res;
   });
