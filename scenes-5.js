@@ -54,11 +54,12 @@
       const ph = hash(k, 3) * 10;
       const fx = (vnoise(k * 7.3, t * 0.6 + ph) - 0.5) * cols * 0.75;
       const fy = u * 0.15 + vnoise(k * 3.1 + 50, t * 0.5 + ph) * u * 0.55;
-      const pulse = Math.pow(B(t, 1.5, hash(k, 8)), 3);
+      const pulse = Math.pow(B(t, 1.5, hash(k, 8)), 2);
       if (pulse < 0.02) continue;
-      const d = sdC(X, Y, fx, fy, u * 0.004);
-      if (d < 3) {
-        const v = glow(d, 1.1) * pulse;
+      const big = k < 4;
+      const d = sdC(X, Y, fx, fy, u * (big ? 0.008 : 0.004));
+      if (d < 3.5) {
+        const v = glow(d, big ? 1.6 : 1.1) * pulse;
         if (v > 0.05) res = over(res, [clamp(v * 1.3, 0, 1), 0]);
       }
     }

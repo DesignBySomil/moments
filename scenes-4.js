@@ -102,24 +102,83 @@
     return res;
   });
 
-  add('train', '#141412', ['#e8e4da', '#8f8a80'], 10, (x, y, t, cols, rows) => {
-    const bk = getBake('train');
+  add('train', '#141412', ['#ffd9a0', '#8f8a80'], 10, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     let res = 0;
-    const gy = u * 0.72;
+    const gy = u * 0.74;
+    // ground + rails
     if (Y > gy) {
       const tex = fbm(X * 0.7, Y * 0.7, 2);
       res = [0.10 + 0.08 * (tex - 0.5), 1];
+      if (Math.abs(Y - gy - u * 0.018) < 1.1) res = over(res, [0.5, 1]);
+      if (Math.abs(Y - gy - u * 0.034) < 1.1) res = over(res, [0.38, 1]);
+      if (vnoise(X * 1.4 + t * 30, Y * 3.1) > 0.90 && Y < gy + u * 0.05) res = over(res, [0.30, 1]);
     }
-    if (bk) {
-      const pan = ((t * 0.06) % 0.5 - 0.25) * 2;
-      const fw = u * 0.50, fh = u * 0.19, cy = u * 0.52;
-      const dx = X - pan * u * 0.30, dy = Y - cy;
-      if (Math.abs(dx) <= fw && Math.abs(dy) <= fh) {
-        const sx = dx / (fw * 2) + 0.5, sy = dy / (fh * 2) + 0.5;
-        const eg = ss(0, 0.10, sx) * ss(1, 0.90, sx);
-        const v0 = sampleBake(bk, sx * (bk.w - 1), sy * (bk.h - 1)) * eg;
-        if (v0 > 0.04) res = over(res, [clamp(v0 * 1.2, 0, 1), 0]);
+    const pan = S(t, 0.5) * u * 0.08, bob = S(t, 2, 0.1) * u * 0.004;
+    const cx = pan, cy = u * 0.585 + bob;
+    const bw = u * 0.26, bh = u * 0.075;
+    if (Math.abs(X - cx) < bw + u * 0.06 && Math.abs(Y - cy) < bh + u * 0.10) {
+      // body with rounded roof and raised front cab
+      const sdBody = (px, py) => {
+        let d = sdBox(px, py, cx, cy, bw, bh) - u * 0.012;
+        d = Math.min(d, sdE(px, py, cx, cy - bh, bw * 0.9, u * 0.018));
+        d = Math.min(d, sdBox(px, py, cx + bw * 0.62, cy - bh * 0.55, bw * 0.34, bh * 0.62) - u * 0.008);
+        return d;
+      };
+      const dB = sdBody(X, Y);
+      if (dB < 0.8) {
+        // manual vertical gradient: lit roof, dark undercarriage
+        let v = clamp(0.92 - 0.75 * ss(-bh, bh * 1.1, Y - cy), 0.18, 1);
+        v += 0.20 * ss(u * 0.012, 0, dB); // hot rim on top edge
+        res = over(res, [clamp(v, 0, 1), 1]);
+      }
+      // undercarriage gap (real black between body and wheels)
+      // wheels: two bogies, dark with lit hubs
+      for (let b = -1; b <= 1; b += 2) {
+        const wx = cx + b * bw * 0.52, wy = cy + bh + u * 0.020;
+        const dw = sdC(X, Y, wx, wy, u * 0.026);
+        if (dw < 0.8) {
+          const sh = shade((qx, qy) => sdC(qx, qy, wx, wy, u * 0.026), X, Y, -0.4, -0.8);
+          if (sh > 0) res = over(res, [sh * 0.5, 1]);
+        }
+        if (sdC(X, Y, wx, wy, u * 0.008) < 0) res = over(res, [0.65, 1]);
+      }
+      // window band: warm lit rectangles with dark frames
+      for (let i = 0; i < 6; i++) {
+        const wx = cx - bw * 0.78 + i * bw * 0.28;
+        if (wx > cx + bw * 0.35) continue;
+        const wd = sdBox(X, Y, wx, cy - bh * 0.38, u * 0.020, u * 0.026);
+        if (wd < 0) {
+          const flick = 0.85 + 0.15 * vnoise(i * 9.1, t * 3);
+          res = over(res, [clamp(0.98 * flick, 0, 1), 0]);
+        }
+      }
+      // cab window
+      if (sdBox(X, Y, cx + bw * 0.66, cy - bh * 0.72, u * 0.016, u * 0.018) < 0) res = over(res, [0.9, 0]);
+      // headlight + beam
+      const hx = cx + bw * 0.97, hy = cy + bh * 0.25;
+      const dh = sdC(X, Y, hx, hy, u * 0.010);
+      if (dh < 2.5) { const v = glow(dh, 1.3); if (v > 0.05) res = over(res, [clamp(v * 1.3, 0, 1), 0]); }
+      const rel = X - hx;
+      if (rel > 0 && rel < u * 0.16) {
+        const spread = u * 0.008 + rel * 0.35;
+        const perp = Math.abs(Y - hy - rel * 0.18);
+        if (perp < spread) {
+          const v = (1 - perp / spread) * (1 - rel / (u * 0.16)) * 0.4;
+          if (v > 0.04) res = over(res, [v, 0]);
+        }
+      }
+      // smoke puffs from the stack
+      for (let k = 0; k < 4; k++) {
+        const pp = (t * 0.8 + k / 4) % 1;
+        const sx = cx + bw * 0.45 - pp * u * 0.10 + fbm(k * 3.3, t, 2) * u * 0.02;
+        const sy = cy - bh - u * 0.03 - pp * u * 0.16;
+        const sr = u * (0.012 + pp * 0.020);
+        const ds = sdC(X, Y, sx, sy, sr);
+        if (ds < 1.2) {
+          const v = glow(ds, sr * 0.45) * (1 - pp) * 0.45;
+          if (v > 0.05) res = over(res, [v, 1]);
+        }
       }
     }
     return res;

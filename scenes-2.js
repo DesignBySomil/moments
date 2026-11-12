@@ -150,20 +150,22 @@
     if (Y > ridgeY) res = [0.30 + 0.15 * fbm(X * 0.4, Y * 0.4, 2), 1];
     const st = drift(X, Y, t, { scale: 0.55, thresh: 0.87, gain: 0.5, speed: 0.4, twinkle: 3 });
     if (Y < ridgeY && st > 0) res = over(res, [st, 1]);
-    for (let k = 0; k < 3; k++) {
-      const p = (t + k / 3) % 1;
+    for (let k = 0; k < 4; k++) {
+      const p = (t + k / 4) % 1;
       if (p > 0.55) continue;
       const hx = -cols * 0.45 / 1.06 + hash(k, 7) * cols * 0.5 + p * u * 0.9;
       const hy = u * (0.08 + hash(k, 5) * 0.25) + p * u * 0.55;
       const dx = 0.86, dy = 0.5;
-      const dHead = sdC(X, Y, hx, hy, u * 0.008);
+      const fade = ss(0, 0.06, p) * (1 - ss(0.38, 0.55, p));
+      const dHead = sdC(X, Y, hx, hy, u * 0.013);
       const rel = (X - hx) * -dx + (Y - hy) * -dy;
-      if (rel > 0 && rel < u * 0.16) {
+      if (rel > 0 && rel < u * 0.26) {
         const perp = Math.abs((X - hx) * dy - (Y - hy) * dx);
-        const v = glow(perp, u * 0.0035) * (1 - rel / (u * 0.16)) * 0.8;
-        if (v > 0.05) res = over(res, [v, 0]);
+        const taper = 1 - rel / (u * 0.26);
+        const v = glow(perp, u * 0.006 * taper + 0.35) * taper * 1.1 * fade;
+        if (v > 0.05) res = over(res, [clamp(v, 0, 1), 0]);
       }
-      if (dHead < 1.5) { const v = glow(dHead, 1.2); if (v > 0.05) res = over(res, [v, 0]); }
+      if (dHead < 2.2) { const v = glow(dHead, 1.6) * fade; if (v > 0.05) res = over(res, [clamp(v * 1.25, 0, 1), 0]); }
     }
     return res;
   });
