@@ -4,8 +4,16 @@
   const H = root.__H, add = root.__addScene;
   const { TAU, clamp, lerp, ss, S, B, vnoise, fbm, sdC, sdE, sdBox, sdSeg, shade, glow, over, drift, waveField, getBake, sampleBake, hash } = H;
   const sdTri = (X, Y, ax, ay, bx, by, cx, cy) => {
-    const e = (x0, y0, x1, y1) => (X - x0) * (y1 - y0) - (Y - y0) * (x1 - x0);
-    return Math.max(e(ax, ay, bx, by), e(bx, by, cx, cy), e(cx, cy, ax, ay)) / Math.max(Math.hypot(bx - ax, by - ay), Math.hypot(cx - bx, cy - by), Math.hypot(ax - cx, ay - cy)) * 2.2;
+    const e = (x0, y0, x1, y1, ox, oy) => {
+      const v = (X - x0) * (y1 - y0) - (Y - y0) * (x1 - x0);
+      const s = Math.sign((ox - x0) * (y1 - y0) - (oy - y0) * (x1 - x0)) || 1;
+      return v * s;
+    };
+    const d = Math.min(
+      e(ax, ay, bx, by, cx, cy) / Math.max(Math.hypot(bx - ax, by - ay), 0.001),
+      e(bx, by, cx, cy, ax, ay) / Math.max(Math.hypot(cx - bx, cy - by), 0.001),
+      e(cx, cy, ax, ay, bx, by) / Math.max(Math.hypot(ax - cx, ay - cy), 0.001));
+    return -d * 2.2;
   };
   const clouds = (X, Y, t, fq, th, gain) => {
     const c = fbm(X * fq + t * 1.6, Y * fq * 1.9, 4);
