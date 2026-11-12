@@ -86,12 +86,12 @@
     return res;
   });
 
-  add('bird', '#10131f', ['#ffffff', '#5b668f'], 12, (x, y, t, cols, rows) => {
+  add('bird', '#0b0e17', ['#ffffff', '#5b668f'], 12, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     // clouds: slow drift, dim
     const cl = fbm(X * 0.06 - t * 2.2, Y * 0.12 + 3, 4);
-    if (cl > 0.60 && Y < u * 0.62) return [ss(0.60, 0.82, cl) * 0.25, 1];
-    const st = drift(X, Y, t, { gain: 0.25, thresh: 0.90, speed: 0.5, wind: 6, twinkle: 3 });
+    if (cl > 0.64 && Y < u * 0.62) return [ss(0.64, 0.86, cl) * 0.16, 1];
+    const st = drift(X, Y, t, { gain: 0.22, thresh: 0.92, speed: 0.5, wind: 6, twinkle: 3 });
     if (st > 0) return [st, 1];
     // distant gulls: small V silhouettes
     for (let k = 0; k < 3; k++) {
@@ -110,7 +110,7 @@
     const PX = RX * cb + RY * sb, PY = -RX * sb + RY * cb;
     let res = 0;
     if (Math.abs(PX) < u * 0.24 && Math.abs(PY) < u * 0.18) {
-      const L1 = u * 0.075, L2 = u * 0.075;
+      const L1 = u * 0.105, L2 = u * 0.095;
       for (let s = -1; s <= 1; s += 2) {
         const shx = s * u * 0.010, shy = 0;
         const a1 = 0.47 + flap, a2 = -0.16 + flap * 0.6;   // shallow V, tips droop slightly
@@ -121,7 +121,7 @@
         if (dW < u * 0.025) {
           const span = clamp(Math.hypot(PX - shx, PY - shy) / (L1 + L2), 0, 1);
           const rim = 0.5 * glow(Math.abs(dW), u * 0.002);
-          const v = glow(dW, u * 0.003) * (1.0 - 0.35 * span) + rim * 0.35;
+          const v = glow(dW, u * 0.003) * (1.18 - 0.28 * span) + rim * 0.45;
           if (v > 0.05) res = over(res, [clamp(v, 0, 1), 0]);
         }
       }
@@ -131,18 +131,18 @@
       const dTail = sdTri(PX, PY, -u * 0.009, u * 0.028, u * 0.009, u * 0.028, 0, u * 0.044);
       const dCore = Math.min(dBody, dHead, dTail);
       if (dCore < u * 0.02) {
-        const lit = 0.78 + 0.22 * ss(u * 0.010, -u * 0.010, PY);
+        const lit = 1.05 + 0.35 * ss(u * 0.010, -u * 0.010, PY);
         const v = glow(dCore, u * 0.0035) * lit;
-        if (v > 0.05) res = over(res, [clamp(v, 0, 1), 0]);
+        if (v > 0.05) res = over(res, [clamp(v, 0, 1.6), 0]);
       }
       const dAll = Math.min(dCore, Math.min(
         sdSeg(PX, PY, -u * 0.010, 0, -u * 0.075, -u * 0.030) - u * 0.008,
         sdSeg(PX, PY, u * 0.010, 0, u * 0.075, -u * 0.030) - u * 0.008));
-      const halo = glow(Math.max(dAll, 0), u * 0.022) * 0.15;
+      const halo = glow(Math.max(dAll, 0), u * 0.026) * 0.26;
       if (dAll > 0 && halo > 0.03) res = over(res, [halo, 0]);
     }
     return res;
-  });
+  }, { bloom: true });
 
   add('wave', '#0a1a26', ['#ffe1b3', '#7fa8b8'], 10, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y;
@@ -178,7 +178,7 @@
     let res = 0;
     if (Y > gy + u * 0.004) {
       const dash = Y < gy + u * 0.035 ? (((X * 0.5 + t * 90) % 9 + 9) % 9 < 2.2 ? 0.22 : 0) : 0;
-      res = [0.15 + dash + 0.10 * (fbm(X * 0.9, Y * 0.9, 2) - 0.5), 1];
+      res = [0.19 + dash + 0.10 * (fbm(X * 0.9, Y * 0.9, 2) - 0.5), 1];
     }
     // night streetlamp: pole, hot head, halo, light pool on the road
     const lpX = -u * 0.155, lpTop = u * 0.30;
@@ -191,8 +191,8 @@
     if (sdSeg(X, Y, lpX, lpTop, lpX + u * 0.045, lpTop - u * 0.012) - u * 0.005 < 0.5) res = over(res, [0.7, 1]);
     const lampX = lpX + u * 0.050, lampY = lpTop - u * 0.016;
     const dLamp = sdC(X, Y, lampX, lampY, u * 0.011);
-    if (dLamp < 6) { const v = glow(dLamp, 2.6); if (v > 0.04) res = over(res, [clamp(v * 1.25, 0, 1), 0]); }
-    if (sdE(X, Y, lampX + u * 0.05, gy + u * 0.012, u * 0.13, u * 0.014) < 0) res = over(res, [0.30, 0]);
+    if (dLamp < 6) { const v = glow(dLamp, 2.6); if (v > 0.04) res = over(res, [clamp(v * 1.5, 0, 1), 0]); }
+    if (sdE(X, Y, lampX + u * 0.05, gy + u * 0.012, u * 0.13, u * 0.014) < 0) res = over(res, [0.38, 0]);
     const bounce = S(t, 4) * u * 0.005;
     const r = u * 0.082, wy = gy - r + bounce;
     const ax = -u * 0.125, bx2 = u * 0.125;
@@ -205,13 +205,13 @@
       const dR = sdRing(X, Y);
       if (dR < 0.8) {
         const sh = shade(sdRing, X, Y, -0.45, -0.8);
-        if (sh > 0) res = over(res, [clamp(sh * 1.25, 0, 1), 1]);
+        if (sh > 0) res = over(res, [clamp(sh * 1.45, 0, 1), 1]);
       }
-      if (sdC(X, Y, wx, wy, u * 0.011) < 0.5) res = over(res, [0.75, 1]);
+      if (sdC(X, Y, wx, wy, u * 0.011) < 0.5) res = over(res, [0.85, 1]);
       for (let s = 0; s < 8; s++) {
         const a = t * 6 + s * Math.PI / 4;
         const dS = sdSeg(X, Y, wx, wy, wx + Math.cos(a) * r * 0.92, wy + Math.sin(a) * r * 0.92) - u * 0.0016;
-        if (dS < 0.4) res = over(res, [0.26, 1]);
+        if (dS < 0.4) res = over(res, [0.36, 1]);
       }
     }
     // frame: shaded fat tubes
@@ -222,7 +222,7 @@
       const dT = sdT(X, Y);
       if (dT < 0.8) {
         const sh = shade(sdT, X, Y, -0.45, -0.8);
-        if (sh > 0) res = over(res, [clamp(sh * 1.35, 0, 1), 0]);
+        if (sh > 0) res = over(res, [clamp(sh * 1.6, 0, 1), 0]);
       }
     }
     // saddle + handlebar

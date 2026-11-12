@@ -31,7 +31,7 @@
     if (dB < 0.8) {
       const sh = shade(sdBody, X, Y, -0.35, -0.9);
       if (sh > 0) {
-        let v = (0.24 + 0.55 * sh) * (0.65 + 0.60 * ss(base, top, Y));
+        let v = (0.30 + 0.62 * sh) * (0.65 + 0.60 * ss(base, top, Y));
         if (Math.abs(X + halfW * 0.55) < u * 0.006 && Y < top + u * 0.10) v = Math.min(1, v + 0.20); // wax drip
         res = over(res, [clamp(v, 0, 1), 1]);
       }
@@ -39,13 +39,13 @@
     // wick
     if (sdSeg(X, Y, 0, top - u * 0.004, 0, top - u * 0.016) < 0.5) res = over(res, [0.85, 0]);
     // tight halo, then flame on top
-    const vh = glow(sdC(X, Y, 0, top - u * 0.040, 0), u * 0.020) * 0.20;
+    const vh = glow(sdC(X, Y, 0, top - u * 0.045, 0), u * 0.030) * 0.42;
     if (vh > 0.04) res = over(res, [clamp(vh, 0, 1), 0]);
     const fd = flame(X, Y, 0, top - u * 0.004, u * 0.024, u * 0.062, t, 1);
-    if (fd < 1.2) { const v = glow(fd, u * 0.0035); if (v > 0.06) res = over(res, [clamp(v, 0, 1), 0]); }
-    if (fd < 0) res = over(res, [1, 0]);
+    if (fd < 1.2) { const v = glow(fd, u * 0.0035); if (v > 0.06) res = over(res, [clamp(v * 1.3, 0, 1.6), 0]); }
+    if (fd < 0) res = over(res, [1.55, 0]);
     return res;
-  });
+  }, { bloom: true });
 
 
   add('campfire', '#120b06', ['#ffb04a', '#c9b8a8'], 9, (x, y, t, cols, rows) => {

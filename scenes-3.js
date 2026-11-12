@@ -4,11 +4,11 @@
   const H = root.__H, add = root.__addScene;
   const { TAU, clamp, lerp, ss, S, B, vnoise, fbm, sdC, sdE, sdBox, sdSeg, sdVesica, shade, glow, over, drift, waveField, hash, getBake, sampleBake } = H;
 
-  add('snow', '#12161f', ['#eef2f7', '#5a6472'], 14, (x, y, t, cols, rows) => {
+  add('snow', '#0d1119', ['#eef2f7', '#5a6472', '#ffb45e'], 14, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     const gy = u * 0.80 + fbm(X * 0.10, 8.8, 3) * u * 0.06;
     let res = 0;
-    if (Y > gy) res = [0.55 + 0.25 * fbm(X * 0.5, Y * 0.5, 2), 0];
+    if (Y > gy) res = [0.42 + 0.20 * fbm(X * 0.5, Y * 0.5, 2), 0];
     const hx = -u * 0.16, hw = u * 0.14, hb = u * 0.80, ht = u * 0.60;
     if (X > hx - hw - u * 0.1 && X < hx + hw + u * 0.1 && Y > ht - u * 0.2 && Y < gy + 2) {
       const sdHouse = (px, py) => {
@@ -25,9 +25,13 @@
       const sh = shade(sdHouse, X, Y, -0.4, -0.85);
       if (sh > 0) res = over(res, [clamp(sh * 1.5, 0, 1), 1]);
       const winD = sdBox(X, Y, hx - hw * 0.4, (ht + hb) / 2, u * 0.022, u * 0.022);
-      if (winD < 0) res = over(res, [0.95, 0]);
+      if (winD < 0) res = over(res, [1.0, 2]);
       const w2 = sdBox(X, Y, hx + hw * 0.4, (ht + hb) / 2, u * 0.022, u * 0.022);
-      if (w2 < 0) res = over(res, [0.7, 0]);
+      if (w2 < 0) res = over(res, [0.85, 2]);
+      for (const [wx, wv] of [[hx - hw * 0.4, 0.26], [hx + hw * 0.4, 0.20]]) {
+        const wg = glow(sdE(X, Y, wx, (ht + hb) / 2, u * 0.045, u * 0.040), u * 0.016) * wv;
+        if (wg > 0.04) res = over(res, [clamp(wg, 0, 1), 2]);
+      }
       for (let k = 0; k < 4; k++) {
         const p = (t * 0.7 + k / 4) % 1;
         const sx = hx + hw * 0.55 + S(t, 1, k) * u * 0.02, sy = ht - u * 0.15 - p * u * 0.18;
@@ -36,7 +40,7 @@
       }
     }
     for (let L = 0; L < 3; L++) {
-      const sc = [1.6, 2.6, 4.2][L], sp = [7, 11, 16][L], th = [0.90, 0.88, 0.86][L], gn = [0.85, 0.5, 0.3][L];
+      const sc = [1.6, 2.6, 4.2][L], sp = [7, 11, 16][L], th = [0.925, 0.90, 0.885][L], gn = [0.60, 0.42, 0.26][L];
       const n = vnoise(X * sc * 0.5 + L * 40, (Y + t * sp) * sc * 0.22);
       if (n > th) {
         const d2 = hash(Math.floor(X * sc * 0.5 + L * 40), Math.floor((Y + t * sp) * sc * 0.22));
