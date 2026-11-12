@@ -45,7 +45,7 @@
     return res;
   });
 
-  add('jellyfish', '#06182e', ['#a8e0ff', '#e8f6ff', '#ff9ad5'], 12, (x, y, t, cols, rows) => {
+  add('jellyfish', '#040e1a', ['#a8e0ff', '#e8f6ff', '#ff9ad5'], 12, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     let res = 0;
     const parts = drift(X, Y, t, { scale: 0.5, thresh: 0.90, gain: 0.30, speed: 1.2, windY: -1.5 });
@@ -97,7 +97,7 @@
     return res;
   }, { bloom: true });
 
-  add('butterfly', '#150a20', ['#ffb3d9', '#c77ae8', '#f5f0ff'], 10, (x, y, t, cols, rows) => {
+  add('butterfly', '#0a0610', ['#ffb3d9', '#c77ae8', '#f5f0ff'], 10, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     let res = 0;
     const motes = drift(X, Y, t, { gain: 0.22, thresh: 0.90, speed: 0.8, twinkle: 2 });
@@ -284,7 +284,7 @@
     return res;
   });
 
-  add('windmill', '#0e1a2c', ['#f0e8d8', '#a8b8d0'], 14, (x, y, t, cols, rows) => {
+  add('windmill', '#080f1a', ['#f0e8d8', '#a8b8d0'], 14, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     const gy = u * 0.82, tx = 0, hubY = u * 0.37, bladeL = u * 0.19;
     let res = 0;

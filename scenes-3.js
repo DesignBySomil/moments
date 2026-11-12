@@ -23,7 +23,7 @@
         return Math.max(e(ax, ay, bx, by), e(bx, by, cx, cy), e(cx, cy, ax, ay)) / (u * 0.3);
       };
       const sh = shade(sdHouse, X, Y, -0.4, -0.85);
-      if (sh > 0) res = over(res, [clamp(sh * 0.85, 0, 1), 0]);
+      if (sh > 0) res = over(res, [clamp(sh * 1.05, 0, 1), 0]);
       const winD = sdBox(X, Y, hx - hw * 0.4, (ht + hb) / 2, u * 0.022, u * 0.022);
       if (winD < 0) res = over(res, [1.0, 2]);
       const w2 = sdBox(X, Y, hx + hw * 0.4, (ht + hb) / 2, u * 0.022, u * 0.022);
@@ -50,7 +50,7 @@
     return res;
   });
 
-  add('lighthouse', '#0e2438', ['#f2f6ff', '#8fb6d8'], 12, (x, y, t, cols, rows) => {
+  add('lighthouse', '#08121e', ['#f2f6ff', '#8fb6d8'], 12, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     const lx = 0, lampY = u * 0.26, baseY = u * 0.68;
     let res = 0;

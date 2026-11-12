@@ -244,7 +244,7 @@
     return res;
   });
 
-  add('rain', '#1d2230', ['#bcd6ff', '#5f6b85', '#ffd9a0'], 10, (x, y, t, cols, rows) => {
+  add('rain', '#11141e', ['#bcd6ff', '#5f6b85', '#ffd9a0'], 10, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y;
     let res = 0;
     if (Y < rows * 0.34) {

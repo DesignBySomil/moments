@@ -10,7 +10,7 @@
     return Math.min(bul, tip);
   };
 
-  add('candle', '#160d08', ['#ffc46b', '#f5ead8'], 10, (x, y, t, cols, rows) => {
+  add('candle', '#0c0705', ['#ffc46b', '#f5ead8'], 10, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     let res = 0;
     const motes = drift(X, Y, t, { gain: 0.10, thresh: 0.95, speed: 0.7 });
@@ -48,7 +48,7 @@
   }, { bloom: true });
 
 
-  add('campfire', '#120b06', ['#ffb04a', '#c9b8a8'], 9, (x, y, t, cols, rows) => {
+  add('campfire', '#0d0804', ['#ffb04a', '#c9b8a8'], 9, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     let res = 0;
     const base = u * 0.72;
@@ -89,7 +89,7 @@
     // flame: 3 nested teardrop layers, independent sway, hot core
     const layers = [
       [u * 0.190, u * 0.42, 0.30, 2.1],
-      [u * 0.130, u * 0.34, 0.55, 4.7],
+      [u * 0.130, u * 0.34, 0.65, 4.7],
       [u * 0.070, u * 0.23, 1.00, 8.3]];
     if (Y < base + 2 && Y > base - u * 0.55 && Math.abs(X) < u * 0.38) {
       for (let i = 0; i < 3; i++) {
@@ -199,7 +199,7 @@
     return res;
   }, { bloom: true });
 
-  add('dandelion', '#101a12', ['#eef5e6', '#8fbf8a'], 14, (x, y, t, cols, rows) => {
+  add('dandelion', '#070b08', ['#eef5e6', '#8fbf8a'], 14, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     let res = 0;
     const sway = S(t, 0.7) * u * 0.012;
