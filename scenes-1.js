@@ -168,7 +168,7 @@
       res = [0.15 + dash + 0.10 * (fbm(X * 0.9, Y * 0.9, 2) - 0.5), 1];
     }
     // night streetlamp: pole, hot head, halo, light pool on the road
-    const lpX = -u * 0.20, lpTop = u * 0.30;
+    const lpX = -u * 0.155, lpTop = u * 0.30;
     const sdPole = (px, py) => sdSeg(px, py, lpX, gy, lpX, lpTop) - u * 0.006;
     const dP = sdPole(X, Y);
     if (dP < 0.8) {
@@ -181,8 +181,8 @@
     if (dLamp < 6) { const v = glow(dLamp, 2.6); if (v > 0.04) res = over(res, [clamp(v * 1.25, 0, 1), 0]); }
     if (sdE(X, Y, lampX + u * 0.05, gy + u * 0.012, u * 0.13, u * 0.014) < 0) res = over(res, [0.30, 0]);
     const bounce = S(t, 4) * u * 0.005;
-    const r = u * 0.095, wy = gy - r + bounce;
-    const ax = -u * 0.145, bx2 = u * 0.145;
+    const r = u * 0.082, wy = gy - r + bounce;
+    const ax = -u * 0.125, bx2 = u * 0.125;
     // wheels: tire ring + hub + 6 rotating spokes
     for (let w = 0; w < 2; w++) {
       const wx = w === 0 ? ax : bx2;

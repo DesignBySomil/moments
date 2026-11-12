@@ -166,7 +166,7 @@
       if (sdC(X, Y, mx - u * 0.014, my + u * 0.014, u * 0.006) < 0) v -= 0.14;
       res = over(res, [clamp(v, 0, 1), 0]);
     }
-    const gy = u * 0.82, by = u * 0.22, W = u * 0.21;
+    const gy = u * 0.82, by = u * 0.22, W = u * 0.16;
     // ground: grass field with blade tufts and moonlit crest
     if (Y > gy) {
       let g = 0.14 + 0.10 * fbm(X * 0.6, Y * 0.6, 2);
@@ -175,7 +175,7 @@
       if (vnoise(X * 2.6, Y * 1.4) > 0.78 && Y < gy + u * 0.05) res = over(res, [0.38, 1]); // blade tips
     }
     // frame: top bar + angled legs, shaded with moon rim
-    const frameParts = [[-W, by, W, by], [-W, by, -W - u * 0.055, gy], [W, by, W + u * 0.055, gy]];
+    const frameParts = [[-W, by, W, by], [-W, by, -W - u * 0.04, gy], [W, by, W + u * 0.04, gy]];
     for (const [x0, y0, x1, y1] of frameParts) {
       const sdF = (px, py) => sdSeg(px, py, x0, y0, x1, y1) - u * 0.016;
       const dF = sdF(X, Y);
@@ -185,14 +185,14 @@
       }
     }
     // pendulum
-    const a = 0.45 * S(t, 1);
-    const L = u * 0.40;
+    const a = 0.38 * S(t, 1);
+    const L = u * 0.34;
     const sx = Math.sin(a) * L, sy = by + Math.cos(a) * L;
     // cast shadow on the ground, swinging with the seat
-    if (Y > gy && sdE(X, Y, Math.sin(a) * L * 1.15, gy + u * 0.025, u * 0.075, u * 0.013) < 0) res = over(res, [0.05, 1]);
+    if (Y > gy && sdE(X, Y, Math.sin(a) * L * 1.15, gy + u * 0.025, u * 0.06, u * 0.013) < 0) res = over(res, [0.05, 1]);
     // chains with link texture
     for (let s = -1; s <= 1; s += 2) {
-      const ex = sx + s * u * 0.055;
+      const ex = sx + s * u * 0.045;
       const dR = sdSeg(X, Y, s * u * 0.007, by, ex, sy) - u * 0.0035;
       if (dR < 0.6) {
         const along = ((X - s * u * 0.007) * (ex - s * u * 0.007) + (Y - by) * (sy - by)) / (L * L);
@@ -202,7 +202,7 @@
       }
     }
     // wooden plank: three boards, hot moonlit top edge, dark underside
-    const sdSeat = (px, py) => sdBox(px, py, sx, sy, u * 0.062, u * 0.017) - u * 0.004;
+    const sdSeat = (px, py) => sdBox(px, py, sx, sy, u * 0.052, u * 0.017) - u * 0.004;
     const dS = sdSeat(X, Y);
     if (dS < 0.8) {
       let v = clamp(0.98 - 1.05 * ss(-u * 0.016, u * 0.020, Y - sy), 0.10, 1);
