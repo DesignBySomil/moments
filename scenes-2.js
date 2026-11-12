@@ -44,7 +44,7 @@
     // ember bed: hot mottled ellipse under the logs
     const dEmb = sdE(X, Y, 0, base + u * 0.006, u * 0.075, u * 0.015);
     if (dEmb < 0) {
-      const v = (0.45 + 0.55 * fbm(X * 2.4, Y * 2.4 - t * 1.5, 2)) * (0.7 + 0.3 * S(t, 3.1));
+      const v = (0.60 + 0.55 * fbm(X * 2.4, Y * 2.4 - t * 1.5, 2)) * (0.7 + 0.3 * S(t, 3.1));
       res = over(res, [clamp(v, 0, 1), 0]);
     }
     // crossed logs: shaded capsules, lit from above by the fire, direct priority over embers
@@ -65,7 +65,7 @@
           const axisY = ay + (by2 - ay) * s;
           const top = ss(r * 1.1, -r * 0.9, Y - axisY);
           const bark = 0.86 + 0.14 * Math.sin(s * 21 + k * 2.4);
-          const v = (0.30 + 0.70 * top) * bark * m * (k === 2 ? 0.9 : 1);
+          const v = (0.16 + 0.82 * top) * bark * m * (k === 2 ? 0.9 : 1);
           res = [clamp(v, 0, 1), 1];
         }
       }

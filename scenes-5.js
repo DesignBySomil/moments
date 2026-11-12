@@ -197,8 +197,8 @@
     };
     const wig = 0.025 * S(t, 1.3), wig2 = 0.03 * S(t, 1.3, 2.2);
     // cotyledons: slender ovals spread wide, dark wedge between them
-    drawLeaf(apexX, apexY + u * 0.015, 0.98 + wig, u * 0.085, u * 0.032, 1.38, 1);
-    drawLeaf(apexX, apexY + u * 0.060, -1.04 + wig2, u * 0.079, u * 0.030, 1.38, 1);
+    drawLeaf(apexX + u * 0.008, apexY + u * 0.010, 1.08 + wig, u * 0.072, u * 0.029, 1.38, 1);
+    drawLeaf(apexX - u * 0.008, apexY + u * 0.052, -1.14 + wig2, u * 0.067, u * 0.027, 1.38, 1);
     // dew specks
     const g = drift(X, Y, t, { gain: 0.12, thresh: 0.94, speed: 1.2 });
     if (g > 0) res = over(res, [g, 1]);

@@ -141,7 +141,7 @@
         if (dE < 0) {
           // strong directional contrast + specular hot spot + alternating gore panels
           const q = ((X - bx) * 0.66 + (Y - by) * 0.75) / rx;
-          v *= clamp(1.10 - 0.70 * ss(-0.9, 1.0, q), 0.35, 1.10);
+          v *= clamp(1.05 - 0.50 * ss(-0.9, 1.0, q), 0.55, 1.05);
           v += 0.55 * glow(sdE(X, Y, bx - rx * 0.38, by - ry * 0.38, rx * 0.26, ry * 0.20), u * 0.018);
           const bandA = Math.atan2((X - bx) * (ry / rx), (Y - by));
           if (Math.sin(bandA * 4) > 0) { ink = 1; v *= 0.80; }
@@ -170,7 +170,8 @@
       };
       const sdK = sdKite(X, Y);
       if (sdK < 0.8) {
-        const sh = shade(sdKite, X, Y, -0.5, -0.8);
+        const sh0k = shade(sdKite, X, Y, -0.5, -0.8);
+        const sh = sh0k > 0 ? 0.55 + 0.45 * sh0k : 0;
         if (sh > 0) {
           const facet = (X - kx) * (Y - ky) > 0 ? 0 : 1;
           res = over(res, [sh, facet]);
@@ -200,7 +201,7 @@
 
   add('paperplane', '#27436b', ['#f0f4fa', '#8fa6c9'], 12, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
-    const px0 = S(t, 1) * u * 0.03, py0 = u * 0.40 + S(t, 2) * u * 0.04;
+    const px0 = -u * 0.03 + S(t, 1) * u * 0.025, py0 = u * 0.40 + S(t, 2) * u * 0.04;
     const bank = S(t, 2, 0.25) * 0.12;
     let res = 0;
     for (let k = 0; k < 3; k++) {
@@ -210,7 +211,7 @@
     const cb = Math.cos(bank), sb = Math.sin(bank);
     const LX = (X - px0) * cb - (Y - py0) * sb, LY = (X - px0) * sb + (Y - py0) * cb;
     if (Math.abs(LX) < u * 0.30 && Math.abs(LY) < u * 0.22) {
-      const L = u * 0.255;
+      const L = u * 0.21;
       const tri = (qx, qy, ax, ay, bx, by, cx, cy) => {
         const e = (x0, y0, x1, y1) => (qx - x0) * (y1 - y0) - (qy - y0) * (x1 - x0);
         const l = (x0, y0, x1, y1) => Math.hypot(x1 - x0, y1 - y0);

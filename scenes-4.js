@@ -127,7 +127,7 @@
 
   add('windmill', '#20365c', ['#f0e8d8', '#a8b8d0'], 14, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
-    const gy = u * 0.82, tx = 0, hubY = u * 0.34, bladeL = u * 0.26;
+    const gy = u * 0.82, tx = 0, hubY = u * 0.37, bladeL = u * 0.215;
     let res = 0;
     const cl = fbm(X * 0.10 + t * 1.8, Y * 0.2, 4);
     if (cl > 0.58 && Y < u * 0.5) res = [ss(0.58, 0.8, cl) * 0.3, 1];
