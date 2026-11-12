@@ -10,25 +10,41 @@
     return Math.min(bul, tip);
   };
 
-  add('candle', '#160d08', ['#ffc46b', '#9a7852'], 10, (x, y, t, cols, rows) => {
-    const bk = getBake('candle');
+  add('candle', '#160d08', ['#ffc46b', '#f5ead8'], 10, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
-    const amb = () => { const a = drift(X, Y, t, { gain: 0.10, thresh: 0.95, speed: 1.6 }); return a ? [a, 0, 0.5] : 0; };
-    if (!bk) return amb();
-    // flame flicker: lateral wobble weighted to the flame (upper bake), brightness breathing
-    const wob = S(t, 3) * 0.008 + (vnoise(t * 7, 3.1) - 0.5) * 0.012;
-    const flick = 0.90 + 0.10 * S(t, 5) + 0.06 * (vnoise(t * 11, 7.7) - 0.5);
-    const fw = u * 0.34, fh = u * 0.46, cyc = u * 0.50;
-    const dx = X, dy = Y - cyc;
-    if (Math.abs(dx) > fw || Math.abs(dy) > fh) return amb();
-    let sx = dx / (fw * 2) + 0.5 + wob * (1 - 2 * (dy / (fh * 2) + 0.5)) * -2.0;
-    const sy = dy / (fh * 2) + 0.5;
-    if (sx < 0 || sx > 1) return amb();
-    const v0 = sampleBake(bk, sx * (bk.w - 1), sy * (bk.h - 1));
-    const flame = sy < 0.52;
-    const v = clamp(v0 * (flame ? 1.35 * flick : 1.55 + 0.06 * S(t, 2)), 0, 1);
-    if (v <= 0.02) return amb();
-    return [v, flame ? 0 : 1];
+    let res = 0;
+    const motes = drift(X, Y, t, { gain: 0.10, thresh: 0.95, speed: 0.7 });
+    if (motes > 0) res = [motes, 0];
+    const top = u * 0.60, base = u * 0.86, halfW = u * 0.042;
+    // table: warm pool of candlelight fading outward
+    if (Y > base) {
+      const v = (0.06 + 0.22 * glow(Math.abs(X), u * 0.14)) * ss(base, base + u * 0.05, Y);
+      res = over(res, [clamp(v, 0, 1), 0]);
+    }
+    // candle body: rounded column with wax lip, lit by its own flame from above
+    const sdBody = (px, py) => {
+      let d = sdBox(px, py, 0, (top + base) / 2, halfW, (base - top) / 2) - u * 0.008;
+      d = Math.min(d, sdE(px, py, 0, top, halfW, u * 0.012));
+      return d;
+    };
+    const dB = sdBody(X, Y);
+    if (dB < 0.8) {
+      const sh = shade(sdBody, X, Y, -0.35, -0.9);
+      if (sh > 0) {
+        let v = (0.24 + 0.55 * sh) * (0.65 + 0.60 * ss(base, top, Y));
+        if (Math.abs(X + halfW * 0.55) < u * 0.006 && Y < top + u * 0.10) v = Math.min(1, v + 0.20); // wax drip
+        res = over(res, [clamp(v, 0, 1), 1]);
+      }
+    }
+    // wick
+    if (sdSeg(X, Y, 0, top - u * 0.004, 0, top - u * 0.016) < 0.5) res = over(res, [0.85, 0]);
+    // tight halo, then flame on top
+    const vh = glow(sdC(X, Y, 0, top - u * 0.040, 0), u * 0.020) * 0.20;
+    if (vh > 0.04) res = over(res, [clamp(vh, 0, 1), 0]);
+    const fd = flame(X, Y, 0, top - u * 0.004, u * 0.024, u * 0.062, t, 1);
+    if (fd < 1.2) { const v = glow(fd, u * 0.0035); if (v > 0.06) res = over(res, [clamp(v, 0, 1), 0]); }
+    if (fd < 0) res = over(res, [1, 0]);
+    return res;
   });
 
 
@@ -65,7 +81,7 @@
           const axisY = ay + (by2 - ay) * s;
           const top = ss(r * 1.1, -r * 0.9, Y - axisY);
           const bark = 0.86 + 0.14 * Math.sin(s * 21 + k * 2.4);
-          const v = (0.16 + 0.82 * top) * bark * m * (k === 2 ? 0.9 : 1);
+          const v = (0.34 + 0.80 * top) * bark * m * (k === 2 ? 0.9 : 1);
           res = [clamp(v, 0, 1), 1];
         }
       }
@@ -116,13 +132,13 @@
     const st = drift(X, Y, t, { scale: 0.5, thresh: 0.92, gain: 0.4, speed: 0.5, twinkle: 3 });
     if (st > 0 && Y < horizon) res = [st, 0];
     // crisp full moon: maria blotches, slight limb lift, tight halo
-    const cx = 0, cy = u * 0.30, R = u * 0.205;
+    const cx = 0, cy = u * 0.26, R = u * 0.135;
     const dM = sdC(X, Y, cx, cy, R);
     if (dM < 1.2) {
       let v;
       if (dM <= 0) {
-        const maria = ss(0.52, 0.74, fbm(X * 0.09 + 7.3, Y * 0.09 + 2.1, 3)) * 0.40;
-        v = clamp(0.86 - maria + 0.10 * ss(0, 0.4, -dM / R), 0, 1);
+        const maria = ss(0.55, 0.80, fbm(X * 0.055 + 7.3, Y * 0.055 + 2.1, 3)) * 0.22;
+        v = clamp(0.92 - maria + 0.08 * ss(0, 0.4, -dM / R), 0, 1);
       } else {
         v = glow(dM, u * 0.006) * 0.5;
       }
@@ -196,7 +212,7 @@
       const la = -0.65, ca = Math.cos(la), sa = Math.sin(la);
       const LX = X - u * 0.015, LY = Y - u * 0.86;
       const RX = LX * ca + LY * sa, RY = -LX * sa + LY * ca;
-      const dLeaf = sdVesica(RX, RY, 0, 0, u * 0.052, u * 0.030);
+      const dLeaf = sdVesica(RX, RY, 0, 0, u * 0.034, u * 0.018);
       if (dLeaf < 1.2) { const v = glow(dLeaf, u * 0.004) * 0.45; if (v > 0.05) res = over(res, [clamp(v, 0, 1), 1]); }
     }
     // seed clock: radiating spokes with pappus stars at the tips, dark gaps between
@@ -240,18 +256,18 @@
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     let res = 0;
     const half = cols / 2.12;
-    for (let k = 0; k < 5; k++) {
-      const p = (t * 0.8 + k / 5) % 1;
-      const lx = (hash(k, 11) - 0.5) * 2 * half * 0.8 + S(t, 1, k * 0.7) * u * 0.06;
-      const ly = -u * 0.15 + p * (u * 1.3);
-      const rot = S(t, 2, k * 0.31) * 0.9 + k;
-      if (Math.abs(X - lx) > u * 0.16 || Math.abs(Y - ly) > u * 0.16) continue;
+    for (let k = 0; k < 8; k++) {
+      const p = (t * 0.7 + k / 8) % 1;
+      const lx = (hash(k, 11) - 0.5) * 2 * half * 0.85 + S(t, 1, k * 0.7) * u * 0.05 + S(t, 3, k) * u * 0.02;
+      const ly = -u * 0.10 + p * (u * 1.25);
+      const rot = S(t, 2, k * 0.31) * 1.2 + k;
+      if (Math.abs(X - lx) > u * 0.06 || Math.abs(Y - ly) > u * 0.06) continue;
       const ca = Math.cos(rot), sa = Math.sin(rot);
       const RX = (X - lx) * ca + (Y - ly) * sa, RY = -(X - lx) * sa + (Y - ly) * ca;
-      const L = u * 0.095;
-      const sdLeaf = (px, py) => Math.min(sdVesica(px, py, 0, 0, L * 1.5, L * 1.05), Math.abs(sdSeg(px, py, 0, -L * 0.8, 0, L * 0.8)) - u * 0.004);
+      const L = u * 0.030;
+      const sdLeaf = (px, py) => sdVesica(px, py, 0, 0, L * 1.7, L * 1.0);
       const sh = shade(sdLeaf, RX, RY, -0.5, -0.8);
-      if (sh > 0) res = over(res, [sh, k % 2, 1 - ss(0.85, 1, p)]);
+      if (sh > 0) res = over(res, [sh * (1 - ss(0.88, 1, p)), k % 2]);
     }
     const g = drift(X, Y, t, { gain: 0.12, thresh: 0.92, speed: 2 });
     if (g > 0) res = over(res, [g, 1]);

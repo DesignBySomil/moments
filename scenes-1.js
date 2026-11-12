@@ -44,7 +44,7 @@
     return [clamp(v * 1.1, 0, 1), 0];
   });
 
-  add('sail', '#1f47e0', ['#f5f7ff', '#a9bcff'], 16, (x, y, t, cols, rows) => {
+  add('sail', '#0a1428', ['#f5f7ff', '#93a8d8'], 16, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y;
     const bobY = S(t, 2) * rows * 0.006, bx = -cols * 0.05, wl = rows * 0.56 + bobY;
     let res = 0;
@@ -80,55 +80,55 @@
     return res;
   });
 
-  add('bird', '#6f7be8', ['#ffffff', '#454fb0'], 12, (x, y, t, cols, rows) => {
+  add('bird', '#10131f', ['#ffffff', '#5b668f'], 12, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
-    let res = 0;
-    const cl = clouds(X, Y, t, 0.15, 0.58, 0.32);
-    if (cl > 0) res = [cl, 1];
-    // distant gulls: small dim chevrons
+    // clouds: slow drift, dim
+    const cl = fbm(X * 0.06 - t * 2.2, Y * 0.12 + 3, 4);
+    if (cl > 0.60 && Y < u * 0.62) return [ss(0.60, 0.82, cl) * 0.25, 1];
+    const st = drift(X, Y, t, { gain: 0.25, thresh: 0.90, speed: 0.5, wind: 6, twinkle: 3 });
+    if (st > 0) return [st, 1];
+    // distant birds: small V silhouettes
     for (let k = 0; k < 3; k++) {
-      const span = u * (0.045 + hash(k, 21) * 0.02);
-      const gx = (hash(k, 22) - 0.5) * u * 1.1 + S(t, 0.22, hash(k, 23) * 9) * u * 0.14;
-      const gy = u * (0.12 + hash(k, 24) * 0.22) + S(t, 0.8, hash(k, 25) * 9) * u * 0.012;
-      if (Math.abs(X - gx) > span * 1.4 || Math.abs(Y - gy) > span * 0.9) continue;
-      const flap0 = S(t, 2.6, hash(k, 26) * 9);
-      const tipY = gy - flap0 * span * 0.55;
-      const d = Math.min(sdSeg(X, Y, gx - span, tipY, gx, gy + span * 0.05), sdSeg(X, Y, gx, gy + span * 0.05, gx + span, tipY)) - u * 0.006;
-      if (d < 0.8) { const v = glow(d, u * 0.004) * 0.55; if (v > 0.06) res = over(res, [clamp(v, 0, 1), 0]); }
+      const bx = -u * 0.30 + k * u * 0.11 + S(t, 0.5, k) * u * 0.02;
+      const by = u * (0.14 + hash(k, 4) * 0.10) + S(t, 2, k) * u * 0.008;
+      if (sdSeg(X, Y, bx - u * 0.013, by + u * 0.004, bx, by - u * 0.003) < 0.7 ||
+          sdSeg(X, Y, bx, by - u * 0.003, bx + u * 0.013, by + u * 0.004) < 0.7)
+        return [0.5, 1];
     }
-    // hero bird: plump body, head, beak, layered flapping wings
-    const bx = -u * 0.02 + S(t, 0.3) * u * 0.02, by = u * 0.42 + S(t, 1.1) * u * 0.015;
-    const flap = S(t, 2.2) * 0.5;
-    if (Math.abs(X - bx) < u * 0.45 && Math.abs(Y - by) < u * 0.42) {
-      for (const dir of [-1, 1]) {
-        const shx = bx + dir * u * 0.014, shy = by - u * 0.012;
-        for (let j = 0; j < 3; j++) {
-          const L = u * (0.165 - j * 0.024), w = u * (0.026 - j * 0.004);
-          const th = dir > 0 ? (-0.50 - j * 0.38 + flap * (0.9 - j * 0.15)) : (Math.PI + 0.50 + j * 0.38 - flap * (0.9 - j * 0.15));
-          const ex = shx + Math.cos(th) * L, ey = shy + Math.sin(th) * L;
-          const d = sdSeg(X, Y, shx, shy, ex, ey) - w;
-          if (d < 0.7) {
-            const m = ss(0.7, -0.4, d);
-            const s = clamp(((X - shx) * Math.cos(th) + (Y - shy) * Math.sin(th)) / L, 0, 1);
-            const v = (0.95 - j * 0.30 - s * 0.30) * m;
-            if (v > 0.05) res = over(res, [clamp(v, 0, 1), 0]);
-          }
+    // hero bird: tapered body + head + beak + tail, one broad clean wing per side
+    const cx = S(t, 1) * u * 0.04, cy = u * 0.40 + S(t, 2, 0.7) * u * 0.018;
+    const flap = S(t, 5);
+    const sdBody = (px, py) => {
+      let d = sdE(px, py, cx, cy, u * 0.060, u * 0.025);
+      d = Math.min(d, sdE(px, py, cx + u * 0.064, cy - u * 0.022, u * 0.022, u * 0.017));
+      d = Math.min(d, sdTri(px, py, cx + u * 0.082, cy - u * 0.026, cx + u * 0.110, cy - u * 0.019, cx + u * 0.082, cy - u * 0.011));
+      d = Math.min(d, sdTri(px, py, cx - u * 0.046, cy - u * 0.011, cx - u * 0.118, cy + u * 0.002, cx - u * 0.046, cy + u * 0.010));
+      return d;
+    };
+    let res = 0;
+    const L = u * 0.105;
+    for (let s = -1; s <= 1; s += 2) {
+      const far = s < 0;
+      const a = 0.20 + flap * (far ? 0.70 : 0.95) + (far ? 0.35 : 0);
+      const th = s > 0 ? -a : Math.PI + a;
+      const ux = Math.cos(th), uy = Math.sin(th);
+      const shx = cx + s * u * 0.006, shy = cy - u * 0.020;
+      const wx = (X - shx) * ux + (Y - shy) * uy;
+      const wy = -(X - shx) * uy + (Y - shy) * ux;
+      if (wx > -1 && wx < L) {
+        const chord = u * 0.024 * (1 - 0.78 * clamp(wx / L, 0, 1));
+        const dW = Math.abs(wy) - Math.max(chord, u * 0.003);
+        if (dW < 0.8) {
+          let v = glow(dW, u * 0.004);
+          if (far) v *= 0.45; else v *= 0.80 + 0.20 * ss(L, 0, wx);
+          if (v > 0.06) res = over(res, [clamp(v, 0, 1), far ? 1 : 0]);
         }
       }
-      const dTail = sdSeg(X, Y, bx - u * 0.045, by + u * 0.002, bx - u * 0.088, by + u * 0.008) - u * 0.012;
-      if (dTail < 0.5) { const v = ss(0.5, -0.4, dTail) * 0.7; if (v > 0.05) res = over(res, [v, 0]); }
-      const dBody = sdE(X, Y, bx, by, u * 0.068, u * 0.028);
-      if (dBody < 0.8) {
-        const m = ss(0.8, -0.5, dBody);
-        const v = (0.92 + 0.30 * ss(u * 0.02, -u * 0.02, Y - by)) * m;
-        res = over(res, [clamp(v, 0, 1), 0]);
-      }
-      const hx = bx + u * 0.048, hy = by - u * 0.014;
-      const dHead = sdC(X, Y, hx, hy, u * 0.017);
-      if (dHead < 0.6) { const v = ss(0.6, -0.4, dHead) * (0.8 + 0.3 * ss(u * 0.012, -u * 0.012, Y - hy)); if (v > 0.05) res = over(res, [clamp(v, 0, 1), 0]); }
-      const dBeak = sdSeg(X, Y, hx + u * 0.012, hy, hx + u * 0.030, hy + u * 0.004) - u * 0.004;
-      if (dBeak < 0.5) { const v = ss(0.5, -0.3, dBeak) * 0.9; if (v > 0.05) res = over(res, [v, 1]); }
-      if (sdC(X, Y, hx + u * 0.004, hy - u * 0.004, u * 0.003) < 0) res = [0.1, 1];
+    }
+    const dB = sdBody(X, Y);
+    if (dB < 1.0) {
+      const sh = shade(sdBody, X, Y, -0.45, -0.85);
+      if (sh > 0) res = over(res, [clamp(0.55 + 0.45 * sh, 0, 1), 0]);
     }
     return res;
   });
@@ -231,7 +231,7 @@
     return res;
   });
 
-  add('rain', '#1d2230', ['#bcd6ff', '#5f6b85'], 10, (x, y, t, cols, rows) => {
+  add('rain', '#1d2230', ['#bcd6ff', '#5f6b85', '#ffd9a0'], 10, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y;
     let res = 0;
     if (Y < rows * 0.34) {
@@ -253,7 +253,7 @@
         res = over(res, [0.24 + 0.14 * street + 0.05 * hash(b * 9.1, 8.8), 1]);
         const wy = Math.floor((Y - roof) / 3.5), wx = Math.floor((X - b * bw) / 3);
         if (hash(b * 7.3 + wy * 13.7 + wx * 5.1, 2.6) > 0.45 && (X - b * bw) % 3 < 1.6 && (Y - roof) % 3.5 < 1.8)
-          res = over(res, [0.88, 0]);
+          res = over(res, [0.85, 2]);
       }
     }
     const slant = Y * 0.12;
@@ -271,7 +271,7 @@
       const myY = rows * 1.79 - Y + wob;
       const wy = Math.floor((myY - roof2) / 3.5), wx = Math.floor((X - b2 * bw2) / 3);
       if (myY > roof2 && hash(b2 * 7.3 + wy * 13.7 + wx * 5.1, 2.6) > 0.45 && (X - b2 * bw2) % 3 < 1.6)
-        res = over(res, [0.55, 0]);
+        res = over(res, [0.50, 2]);
     }
     // splash rings where drops hit the wet ground
     for (let k = 0; k < 6; k++) {

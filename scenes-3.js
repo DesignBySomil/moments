@@ -120,7 +120,7 @@
     return res;
   });
 
-  add('balloon', '#2f6bd6', ['#ffd9c9', '#e85a4a'], 16, (x, y, t, cols, rows) => {
+  add('balloon', '#0d1322', ['#ffd9c9', '#e85a4a'], 16, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     const bx = S(t, 1) * u * 0.035, by = u * 0.34 + S(t, 2, 0.3) * u * 0.012;
     let res = 0;
@@ -157,7 +157,7 @@
     return res;
   });
 
-  add('kite', '#4a86e8', ['#fff3f0', '#e85a6a'], 12, (x, y, t, cols, rows) => {
+  add('kite', '#0e1524', ['#fff3f0', '#e85a6a'], 12, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     const kx = u * 0.05 + S(t, 1) * u * 0.03, ky = u * 0.30 + S(t, 2, 0.2) * u * 0.03;
     let res = 0;
@@ -200,7 +200,7 @@
     return res;
   });
 
-  add('paperplane', '#27436b', ['#f0f4fa', '#8fa6c9'], 12, (x, y, t, cols, rows) => {
+  add('paperplane', '#0c1424', ['#f0f4fa', '#8fa6c9'], 12, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     const px0 = -u * 0.01 + S(t, 1) * u * 0.015, py0 = u * 0.40 + S(t, 2) * u * 0.04;
     const bank = S(t, 2, 0.25) * 0.12;

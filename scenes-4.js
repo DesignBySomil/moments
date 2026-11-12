@@ -8,68 +8,135 @@
     return Math.max(e(ax, ay, bx, by), e(bx, by, cx, cy), e(cx, cy, ax, ay)) / nrm;
   };
 
-  add('waves', '#0a2e4f', ['#bfe0ff', '#5f9cd8'], 12, (x, y, t, cols, rows) => {
+  add('waves', '#071f38', ['#bfe0ff', '#4a7fb8'], 12, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
-    if (Y < u * 0.20) return drift(X, Y, t, { gain: 0.15, thresh: 0.92, speed: 1 });
-    let v = 0;
-    for (let L = 0; L < 6; L++) {
-      const baseY = u * (0.26 + L * 0.115);
-      const wamp = u * (0.020 + L * 0.007);
-      const yl = baseY + wamp * S(t, 1 + L * 0.22, X * (0.035 + L * 0.012)) + u * 0.006 * S(t, 2.6, X * 0.15 + L);
+    let res = 0;
+    if (Y < u * 0.16) {
+      const s = drift(X, Y, t, { gain: 0.14, thresh: 0.93, speed: 0.8 });
+      if (s > 0) res = [s, 1];
+    }
+    // rolling swell: four bands, hot surface line, bright foam on crest peaks, dark troughs
+    for (let L = 0; L < 4; L++) {
+      const baseY = u * (0.30 + L * 0.150);
+      const k1 = 0.030 + L * 0.009, sp = 0.9 + L * 0.28, ph = L * 1.9;
+      const w1 = S(t, sp, ph + X * k1);
+      const yl = baseY + u * (0.026 + L * 0.007) * w1 + u * 0.007 * S(t, 1.9, ph * 2 + X * 0.10);
       const d = Y - yl;
-      if (d > 0) {
-        const crest = glow(Math.abs(d), u * (0.010 + L * 0.004));
-        const body = ss(0, u * 0.06, d) * (0.36 - L * 0.035);
-        const foam = vnoise(X * 0.9, Y * 0.9 + t * 3 + L * 7) > 0.72 ? 0.25 * crest : 0;
-        v = Math.max(v, clamp(body + crest * (0.75 - L * 0.07) + foam, 0, 1));
+      if (d < 0) continue;
+      const crest = ss(u * 0.045, u * 0.004, d);
+      const peak = ss(0.55, 0.95, w1);
+      const foamTex = vnoise(X * 1.4, Y * 1.4 + t * 5 + L * 7);
+      const fade = ss(u * 0.20, u * 0.11, d);
+      const body = ss(0, u * 0.09, d) * (0.34 - L * 0.055) * fade;
+      let v = body + crest * (0.42 - L * 0.04) * (0.35 + 0.65 * fade), ink = 1;
+      if (crest > 0.4 && peak > 0.15 && foamTex > 0.45) {
+        v += crest * peak * 0.55 * ss(0.45, 0.75, foamTex);
+        ink = 0;
       }
+      if (v > 0.03 && (!res || v > res[0])) res = [clamp(v, 0, 1), ink];
     }
-    return v > 0.03 ? [v, 0] : 0;
+    return res;
   });
 
-  add('jellyfish', '#06182e', ['#a8e0ff', '#e8f6ff'], 12, (x, y, t, cols, rows) => {
-    const bk = getBake('jellyfish');
+  add('jellyfish', '#06182e', ['#a8e0ff', '#e8f6ff', '#ff9ad5'], 12, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     let res = 0;
-    const parts = drift(X, Y, t, { scale: 0.5, thresh: 0.88, gain: 0.35, speed: 1.5, windY: -2 });
+    const parts = drift(X, Y, t, { scale: 0.5, thresh: 0.90, gain: 0.30, speed: 1.2, windY: -1.5 });
     if (parts > 0) res = [parts, 0];
-    if (bk) {
-      const bob = S(t, 2, 0.2) * u * 0.015;
-      const pulse = 1 + 0.022 * B(t, 2);
-      const fw = u * 0.225 * pulse, fh = u * 0.40 * pulse;
-      const cxc = u * 0.01 + S(t, 1) * u * 0.02, cyc = u * 0.52 + bob;
-      const dx = X - cxc, dy = Y - cyc;
-      if (Math.abs(dx) <= fw && Math.abs(dy) <= fh) {
-        const sx = dx / (fw * 2) + 0.5, sy = dy / (fh * 2) + 0.5;
-        const edge = ss(0, 0.14, sx) * ss(1, 0.86, sx) * ss(0, 0.10, sy) * ss(1, 0.90, sy);
-        const v0 = sampleBake(bk, sx * (bk.w - 1), sy * (bk.h - 1)) * edge;
-        if (v0 > 0.14) res = over(res, [clamp((v0 - 0.12) * 1.8, 0, 1), sy < 0.34 ? 1 : 0]);
+    const cx = S(t, 1) * u * 0.03, cy = u * 0.34 + S(t, 2, 0.2) * u * 0.02;
+    const pulse = 1 + 0.05 * S(t, 2);
+    const rx = u * 0.125 * pulse, ry = u * 0.115 * (2 - pulse);
+    const dx = X - cx, dy = Y - cy;
+    // bell: dome above a scalloped lower rim
+    const bellD = sdE(dx, dy, 0, 0, rx, ry);
+    const rimY = ry * (0.18 + 0.14 * Math.sin(dx / rx * 8 + TAU * t * 2));
+    const inBell = bellD < 0 && dy < rimY;
+    const inSkirt = dy >= rimY && dy < ry * 0.34 && Math.abs(dx) < rx * 0.92 * (1 - dy / (ry * 0.5));
+    if (inBell || inSkirt) {
+      let v = 0.42 + 0.20 * ss(0, -ry, dy);              // brighter toward crown
+      v += 0.30 * glow(Math.abs(bellD), u * 0.006);       // luminous rim
+      v += 0.15 * glow(sdC(dx, dy, -rx * 0.3, -ry * 0.35, rx * 0.4), rx * 0.35); // off-center sheen
+      if (inSkirt) v *= 0.55;
+      // inner organs: four soft horseshoe dots in the lower dome
+      for (let k = 0; k < 4; k++) {
+        const ox = (k - 1.5) * rx * 0.38, oy = ry * 0.02;
+        if (sdC(dx, dy, ox, oy, u * 0.010) < 0) { v *= 0.55; }
+      }
+      res = over(res, [clamp(v, 0, 1), 1]);
+    }
+    // oral arms: two bright central ribbons
+    for (const k of [-0.5, 0.5]) {
+      const bx = cx + k * rx * 0.35, len = u * 0.20;
+      const rel = Y - (cy + ry * 0.2);
+      if (rel > 0 && rel < len) {
+        const wob = Math.sin(rel * 1.6 / (u * 0.05) * 0.35 + TAU * t * 1.5 + k * 4) * u * 0.008 * (0.4 + rel / len);
+        const d = Math.abs(X - bx - wob) - u * 0.005;
+        const v = glow(d, u * 0.0035) * (1 - rel / len) * 0.9;
+        if (v > 0.06) res = over(res, [clamp(v, 0, 1), 1]);
+      }
+    }
+    // tentacles: five long fading strands
+    for (let k = -2; k <= 2; k++) {
+      if (k === 0) continue;
+      const bx = cx + k * rx * 0.34, len = u * (0.30 + 0.04 * hash(k, 3));
+      const rel = Y - (cy + ry * 0.25);
+      if (rel > 0 && rel < len) {
+        const wob = Math.sin(rel / (u * 0.09) + TAU * t * 1.2 + k * 1.7) * u * 0.022 * (0.3 + rel / len);
+        const d = Math.abs(X - bx - wob) - u * 0.0020;
+        const v = glow(d, u * 0.0022) * (1 - rel / len) * 0.65;
+        if (v > 0.06) res = over(res, [clamp(v, 0, 1), 0]);
       }
     }
     return res;
   });
 
-  add('butterfly', '#2a1840', ['#ffb3d9', '#c77ae8'], 10, (x, y, t, cols, rows) => {
-    const bk = getBake('butterfly');
+  add('butterfly', '#241436', ['#ffb3d9', '#c77ae8', '#f5f0ff'], 10, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     let res = 0;
-    const motes = drift(X, Y, t, { gain: 0.25, thresh: 0.9, speed: 0.8, twinkle: 2 });
+    const motes = drift(X, Y, t, { gain: 0.22, thresh: 0.90, speed: 0.8, twinkle: 2 });
     if (motes > 0) res = [motes, 1];
-    if (bk) {
-      const bob = S(t, 2.2) * u * 0.02, hover = S(t, 0.5, 5) * u * 0.025;
-      const flut = 1 + 0.045 * S(t, 9);
-      const fw = u * 0.24 * flut, fh = u * 0.30, cy = u * 0.46 + bob;
-      const dx = X - hover + fw * 0.282, dy = Y - cy;
-      if (Math.abs(dx) <= fw && Math.abs(dy) <= fh) {
-        const sx = dx / (fw * 2) + 0.5, sy = dy / (fh * 2) + 0.5;
-        const v0 = sampleBake(bk, sx * (bk.w - 1), sy * (bk.h - 1));
-        if (v0 > 0.04) res = over(res, [clamp(v0 * 1.2, 0, 1), 0]);
+    const cx = S(t, 0.5, 5) * u * 0.05, cy = u * 0.44 + S(t, 2.2) * u * 0.02;
+    const flap = Math.abs(Math.sin(TAU * t * 4));
+    const open = 0.35 + 0.65 * flap;
+    const rotEll = (px, py, wx, wy, ang, wrx, wry) => {
+      const ca = Math.cos(ang), sa = Math.sin(ang);
+      const qx = (px - wx) * ca + (py - wy) * sa;
+      const qy = -(px - wx) * sa + (py - wy) * ca;
+      return sdE(qx, qy, 0, 0, wrx, wry);
+    };
+    for (let s = -1; s <= 1; s += 2) {
+      const specs = [
+        [s * (u * 0.016 + u * 0.058 * open), -u * 0.038, u * (0.020 + 0.048 * open), u * 0.046, s * 0.55],
+        [s * (u * 0.012 + u * 0.042 * open),  u * 0.038, u * (0.014 + 0.032 * open), u * 0.034, -s * 0.42]
+      ];
+      for (let i = 0; i < 2; i++) {
+        const [ox, oy, wrx, wry, ang] = specs[i];
+        const dW = rotEll(X, Y, cx + ox, cy + oy, ang, wrx, wry);
+        if (dW < 0.8) {
+          const inner = ss(-u * 0.010, -u * 0.002, dW);
+          let v = glow(dW, u * 0.004) * (0.55 + 0.45 * inner);
+          let ink = inner > 0.5 ? 0 : 1;
+          if (i === 0 && inner > 0.5) {
+            const spotD = Math.min(
+              sdC(X, Y, cx + ox + s * wrx * 0.45, cy + oy - wry * 0.35, u * 0.006),
+              sdC(X, Y, cx + ox + s * wrx * 0.62, cy + oy + wry * 0.05, u * 0.005));
+            if (spotD < 0) { v = 0.95; ink = 2; }
+          }
+          if (v > 0.06) res = over(res, [clamp(v, 0, 1), ink]);
+        }
       }
+    }
+    const dBo = sdSeg(X, Y, cx, cy - u * 0.048, cx, cy + u * 0.052) - u * 0.009;
+    if (dBo < 0.6) { const v = glow(dBo, u * 0.003); if (v > 0.06) res = over(res, [clamp(v, 0, 1), 2]); }
+    for (let s = -1; s <= 1; s += 2) {
+      const dA = sdSeg(X, Y, cx, cy - u * 0.045, cx + s * u * 0.020, cy - u * 0.075);
+      if (dA < 0.5) { const v = glow(dA, 0.5) * 0.7; if (v > 0.06) res = over(res, [clamp(v, 0, 1), 1]); }
+      if (sdC(X, Y, cx + s * u * 0.020, cy - u * 0.075, u * 0.004) < 0) res = over(res, [0.9, 2]);
     }
     return res;
   });
 
-  add('sunrise', '#2b1638', ['#ffd9a0', '#ff9a5c'], 18, (x, y, t, cols, rows) => {
+  add('sunrise', '#1d1027', ['#ffd9a0', '#ff9a5c'], 18, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     const hor = u * 0.66;
     const rise = ss(0.05, 0.55, t);
@@ -201,7 +268,7 @@
     return res;
   });
 
-  add('windmill', '#20365c', ['#f0e8d8', '#a8b8d0'], 14, (x, y, t, cols, rows) => {
+  add('windmill', '#0e1a2c', ['#f0e8d8', '#a8b8d0'], 14, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     const gy = u * 0.82, tx = 0, hubY = u * 0.37, bladeL = u * 0.19;
     let res = 0;
@@ -225,11 +292,11 @@
       const m = ss(0.9, -0.4, dT);
       if (m > 0) {
         const hw = Math.max(halfW(Y), u * 0.030);
-        let v = (1.02 - 0.62 * ss(-hw, hw, X - tx)) * m;
+        let v = (0.72 - 0.42 * ss(-hw, hw, X - tx)) * m;
         v += 0.12 * ss(u * 0.012, 0, Math.abs(X - (tx - hw * 0.92))) * m;
         if (sdE(X, Y, tx, gy - u * 0.008, u * 0.016, u * 0.026) < 0) v *= 0.15;
         else if (sdBox(X, Y, tx, hubY + (gy - hubY) * 0.45, u * 0.009, u * 0.012) < 0) v *= 0.25;
-        res = over(res, [clamp(v, 0, 1), 0]);
+        res = over(res, [clamp(v, 0, 1), 1]);
       }
     }
     // sails: 4 lattice panels, cloth on the trailing side of each spar
