@@ -20,7 +20,7 @@
     return c > th ? ss(th, th + 0.22, c) * gain : 0;
   };
 
-  add('bloom', '#0b0b0e', ['#ff5347'], 14, (x, y, t, cols, rows) => {
+  add('bloom', '#060608', ['#5f130f', '#a1241c', '#ff5347', '#ff8a76', '#ffc9bb'], 14, (x, y, t, cols, rows) => {
     const bk = getBake('bloom');
     if (!bk) return 0;
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
@@ -39,10 +39,16 @@
     const v0 = sampleBake(bk, sx * (bk.w - 1), sy * (bk.h - 1));
     const R = (0.20 + 1.35 * e) * u * 0.26;
     const vis = ss(R, R * 0.80, r);
-    const v = v0 * vis;
+    // tonal curve: crush low mids, push highlights hot; rose heart extra gain
+    const vc = Math.pow(v0, 1.12) * 1.04;
+    const hd = Math.hypot(sx - 0.47, (sy - 0.30) * 1.15);
+    const heart = 0.55 * ss(0.20, 0.02, hd) * e;
+    const hi = 0.55 * ss(0.74, 0.96, v0);
+    const v = (vc + heart + hi) * vis;
     if (v <= 0.02) return amb();
-    return [clamp(v * 1.1, 0, 1), 0];
-  });
+    const ink = v0 > 0.78 ? 4 : v0 > 0.58 ? 3 : v0 > 0.40 ? 2 : v0 > 0.22 ? 1 : 0;
+    return [clamp(v, 0, 1.65), ink];
+  }, { bloom: true });
 
   add('sail', '#0a1428', ['#f5f7ff', '#93a8d8'], 16, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y;
