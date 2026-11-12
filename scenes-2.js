@@ -54,7 +54,7 @@
     const base = u * 0.72;
     // faint warm glow hugging the fire base
     if (Y > base - u * 0.02 && Math.abs(X) < u * 0.16) {
-      const gl = glow(sdE(X, Y, 0, base + u * 0.020, u * 0.13, u * 0.026), u * 0.022) * 0.16;
+      const gl = glow(sdE(X, Y, 0, base + u * 0.020, u * 0.13, u * 0.026), u * 0.030) * 0.30;
       if (gl > 0.05) res = [gl, 0];
     }
     // ember bed: hot mottled ellipse under the logs
@@ -88,8 +88,8 @@
     }
     // flame: 3 nested teardrop layers, independent sway, hot core
     const layers = [
-      [u * 0.170, u * 0.50, 0.42, 2.1],
-      [u * 0.120, u * 0.40, 0.68, 4.7],
+      [u * 0.170, u * 0.50, 0.30, 2.1],
+      [u * 0.120, u * 0.40, 0.55, 4.7],
       [u * 0.065, u * 0.27, 1.00, 8.3]];
     if (Y < base + 2 && Y > base - u * 0.55 && Math.abs(X) < u * 0.38) {
       for (let i = 0; i < 3; i++) {
@@ -137,9 +137,9 @@
     if (dM < 1.2) {
       let v;
       if (dM <= 0) {
-        const maria = ss(0.55, 0.80, fbm(X * 0.055 + 7.3, Y * 0.055 + 2.1, 3)) * 0.22;
+        const maria = ss(0.55, 0.80, fbm(X * 0.055 + 7.3, Y * 0.055 + 2.1, 3)) * 0.16;
         const rr = clamp(-dM / R, 0, 1);
-        v = clamp(0.55 + 0.45 * rr - maria + 0.05 * ss(0, 0.4, rr), 0, 1);
+        v = clamp(0.50 + 0.55 * Math.pow(rr, 1.5) - maria, 0, 1);
       } else {
         v = glow(dM, u * 0.009) * 0.6;
       }
@@ -158,7 +158,7 @@
       if (v > 0.05) res = over(res, [clamp(v, 0, 1), 1]);
     }
     return res;
-  });
+  }, { bloom: true });
 
   add('meteors', '#0c0e1a', ['#f5f1e8', '#7c86b8'], 12, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;

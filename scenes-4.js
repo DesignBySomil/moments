@@ -30,9 +30,9 @@
       const d = Y - yl;
       const depth = u * (0.06 + L * 0.045);
       if (d < -u * 0.012 || d > depth) continue;
-      const bright = 0.38 + L * 0.21;
+      const bright = 0.55 + L * 0.22;
       const lineCore = glow(Math.abs(d + u * 0.0015), u * 0.0028);
-      const lineHalo = glow(Math.abs(d + u * 0.0015), u * 0.011) * 0.35;
+      const lineHalo = glow(Math.abs(d + u * 0.0015), u * 0.011) * 0.5;
       const face = ss(depth, u * 0.004, d) * (0.10 + L * 0.09);
       const peak = ss(0.35, 0.9, w1);
       const foamTex = vnoise(X * 1.3, Y * 1.6 + t * 4 + L * 7);

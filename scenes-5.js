@@ -11,9 +11,11 @@
     let res = 0;
     const trailA = Math.atan2(X - px0, Y - py0);
     const trailR = Math.hypot(X - px0, Y - py0);
-    if (Math.abs(trailR - L) < u * 0.0035 && Math.abs(trailA) < 0.30 && Y > py0) res = over(res, [0.20, 1]);
+    if (Math.abs(trailR - L) < u * 0.0045 && Math.abs(trailA) < 0.30 && Y > py0) res = over(res, [0.34, 1]);
     const gbx = px0 + Math.sin(ang * 0.55) * L, gby = py0 + Math.cos(ang * 0.55) * L;
     if (sdC(X, Y, gbx, gby, u * 0.075) < 0) res = over(res, [0.18, 0]);
+    const g1x = px0 + Math.sin(0.26) * L, g1y = py0 + Math.cos(0.26) * L, g2x = px0 - Math.sin(0.26) * L;
+    if (sdC(X, Y, g1x, g1y, u * 0.045) < 0 || sdC(X, Y, g2x, g1y, u * 0.045) < 0) res = over(res, [0.10, 1]);
     const dBr = sdBox(X, Y, px0, py0 - u * 0.016, u * 0.055, u * 0.016);
     if (dBr < 0.8) {
       const m = ss(0.8, -0.5, dBr);
@@ -25,7 +27,7 @@
     const dRod = sdSeg(X, Y, px0, py0, bx, by) - u * 0.015;
     if (dRod < 0.7 && along > 0 && along < 1) {
       const m = ss(0.7, -0.4, dRod);
-      const v = (0.42 + 0.58 * ss(u * 0.017, -u * 0.013, X - rodXatY)) * m;
+      const v = (0.52 + 0.58 * ss(u * 0.017, -u * 0.013, X - rodXatY)) * m;
       if (v > 0.05) res = over(res, [clamp(v, 0, 1), 0]);
     }
     const rB = u * 0.078;
@@ -107,15 +109,15 @@
     return res;
   });
 
-  add('umbrella', '#131a26', ['#e8d8b0', '#7a8aa0'], 10, (x, y, t, cols, rows) => {
+  add('umbrella', '#0a0f16', ['#e8d8b0', '#7a8aa0'], 10, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     const ux = 0, uy = u * 0.42, R = u * 0.19;
     let res = 0;
     const st = vnoise(X * 1.9, Y * 0.30 - t * 22);
-    if (st > 0.865 && Y < uy - R * 0.2) res = over(res, [ss(0.865, 0.94, st) * 0.6, 1]);
+    if (st > 0.865 && Y < uy - R * 0.2) res = over(res, [ss(0.865, 0.94, st) * 0.75, 1]);
     if (Math.abs(X) < R * 1.35 && Y > uy - R * 1.2 && Y < u * 0.92) {
       const sdUmbr = (px, py) => {
-        let d = Math.max(sdE(px, py, ux, uy + R * 0.25, R, R * 0.62), -(py - uy));
+        let d = Math.max(sdE(px, py, ux, uy + R * 0.25, R, R * 0.62), (py - uy));
         d = Math.min(d, sdSeg(px, py, ux, uy, ux, uy + u * 0.34) - u * 0.006);
         const hook = sdC(px, py, ux + u * 0.022, uy + u * 0.36, u * 0.020);
         d = Math.min(d, py > uy + u * 0.34 ? Math.abs(hook) - u * 0.006 : 1e9);
@@ -124,7 +126,7 @@
       };
       const sh = shade(sdUmbr, X, Y, -0.55, -0.75);
       if (sh > 0) {
-        let v = clamp(sh * 1.2, 0, 1);
+        let v = clamp(sh * 1.6, 0, 1);
         const canopy = sdE(X, Y, ux, uy + R * 0.25, R, R * 0.62) < 0 && Y < uy;
         if (canopy) {
           const ribA = Math.atan2(-(Y - uy), (X - ux));
@@ -218,7 +220,7 @@
     return res;
   });
 
-  add('sprout', '#101a10', ['#a8e88a', '#e8f5d8'], 16, (x, y, t, cols, rows) => {
+  add('sprout', '#070c07', ['#a8e88a', '#e8f5d8'], 16, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     let res = 0;
     const sway = S(t, 0.9) * u * 0.012;
@@ -248,7 +250,7 @@
       const sdLf = (px, py) => {
         const qy = (px - cx2) * ux2 + (py - cy2) * uy2;
         const qx = -(px - cx2) * uy2 + (py - cy2) * ux2;
-        return sdVesica(qx, qy, 0, 0, rr, dd);
+        return sdE(qx, qy, 0, 0, w, b * 0.95);
       };
       const sh = shade(sdLf, X, Y, -0.62, -0.72);
       if (sh > 0) {
@@ -259,8 +261,8 @@
     };
     const wig = 0.025 * S(t, 1.3), wig2 = 0.03 * S(t, 1.3, 2.2);
     // cotyledons: slender ovals spread wide, dark wedge between them
-    drawLeaf(apexX + u * 0.008, apexY + u * 0.010, 1.02 + wig, u * 0.072, u * 0.029, 1.38, 1);
-    drawLeaf(apexX - u * 0.008, apexY + u * 0.010, -1.02 + wig2, u * 0.067, u * 0.027, 1.38, 1);
+    drawLeaf(apexX + u * 0.008, apexY + u * 0.010, 1.02 + wig, u * 0.072, u * 0.029, 1.55, 1);
+    drawLeaf(apexX - u * 0.008, apexY + u * 0.010, -1.02 + wig2, u * 0.067, u * 0.027, 1.55, 1);
     // dew specks
     const g = drift(X, Y, t, { gain: 0.12, thresh: 0.94, speed: 1.2 });
     if (g > 0) res = over(res, [g, 1]);
