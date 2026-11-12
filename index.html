@@ -29,27 +29,45 @@
 <div id="name" class="chrome"></div>
 <div id="count" class="chrome"></div>
 <div id="hint" class="chrome">swipe</div>
-<script src="scenes-core.js"></script>
-<script src="scenes-bake-balloon.js"></script>
-<script src="scenes-bake-bloom.js"></script>
-<script src="scenes-bake-butterfly.js"></script>
-<script src="scenes-bake-candle.js"></script>
-<script src="scenes-bake-cycle.js"></script>
-<script src="scenes-bake-jellyfish.js"></script>
-<script src="scenes-bake-lantern2.js"></script>
-<script src="scenes-bake-leaves.js"></script>
-<script src="scenes-bake-lighthouse.js"></script>
-<script src="scenes-bake-pendulum.js"></script>
-<script src="scenes-bake-swing.js"></script>
-<script src="scenes-bake-train.js"></script>
-<script src="scenes-bake-wave.js"></script>
-<script src="scenes-bake-windmill.js"></script>
-  <script src="scenes-1.js"></script>
-<script src="scenes-2.js"></script>
-<script src="scenes-3.js"></script>
-<script src="scenes-4.js"></script>
-<script src="scenes-5.js"></script>
-<script src="engine.js"></script>
-<script src="app.js"></script>
+<script>
+(function () {
+  var FILES = [
+    'scenes-core.js',
+    'scenes-bake-balloon.js', 'scenes-bake-bloom.js', 'scenes-bake-butterfly.js',
+    'scenes-bake-candle.js', 'scenes-bake-cycle.js', 'scenes-bake-jellyfish.js',
+    'scenes-bake-lantern2.js', 'scenes-bake-leaves.js', 'scenes-bake-lighthouse.js',
+    'scenes-bake-pendulum.js', 'scenes-bake-swing.js', 'scenes-bake-train.js',
+    'scenes-bake-wave.js', 'scenes-bake-windmill.js',
+    'scenes-1.js', 'scenes-2.js', 'scenes-3.js', 'scenes-4.js', 'scenes-5.js',
+    'engine.js', 'app.js'
+  ];
+  function showFailure(failed) {
+    var el = document.createElement('div');
+    el.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;' +
+      'color:rgba(255,255,255,.75);font:12px/1.7 -apple-system,Arial,sans-serif;letter-spacing:.12em;' +
+      'text-transform:uppercase;text-align:center;z-index:3;cursor:pointer;padding:0 32px;';
+    el.textContent = 'could not load ' + failed + ' - tap to retry';
+    el.addEventListener('click', function () { location.reload(); });
+    document.body.appendChild(el);
+  }
+  function loadOne(file, attempt, done) {
+    var s = document.createElement('script');
+    s.src = file + (attempt > 1 ? '?r=' + attempt : '');
+    s.onload = function () { done(null); };
+    s.onerror = function () {
+      s.remove();
+      if (attempt < 4) setTimeout(function () { loadOne(file, attempt + 1, done); }, 350 * attempt * attempt);
+      else done(file);
+    };
+    document.head.appendChild(s);
+  }
+  var i = 0;
+  (function next() {
+    if (i >= FILES.length) return;
+    var f = FILES[i++];
+    loadOne(f, 1, function (err) { if (err) showFailure(err); else next(); });
+  })();
+})();
+</script>
 </body>
 </html>

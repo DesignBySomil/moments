@@ -202,7 +202,7 @@
 
   add('paperplane', '#27436b', ['#f0f4fa', '#8fa6c9'], 12, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
-    const px0 = -u * 0.03 + S(t, 1) * u * 0.025, py0 = u * 0.40 + S(t, 2) * u * 0.04;
+    const px0 = -u * 0.01 + S(t, 1) * u * 0.015, py0 = u * 0.40 + S(t, 2) * u * 0.04;
     const bank = S(t, 2, 0.25) * 0.12;
     let res = 0;
     for (let k = 0; k < 3; k++) {
@@ -212,7 +212,7 @@
     const cb = Math.cos(bank), sb = Math.sin(bank);
     const LX = (X - px0) * cb - (Y - py0) * sb, LY = (X - px0) * sb + (Y - py0) * cb;
     if (Math.abs(LX) < u * 0.30 && Math.abs(LY) < u * 0.22) {
-      const L = u * 0.21;
+      const L = u * 0.20;
       const tri = (qx, qy, ax, ay, bx, by, cx, cy) => {
         const e = (x0, y0, x1, y1) => (qx - x0) * (y1 - y0) - (qy - y0) * (x1 - x0);
         const l = (x0, y0, x1, y1) => Math.hypot(x1 - x0, y1 - y0);
