@@ -61,7 +61,8 @@
       for (const sgn of [1, -0.35]) {
         const dd = sgn > 0 ? dot : -dot;
         if (dd > 0.90) {
-          const v = ss(0.90, 0.995, dd) * glow(rdist, u * 0.30) * (sgn > 0 ? 1.0 : 0.35);
+          const edgeFade = clamp((28.3 - Math.abs(X)) / 5.7, 0, 1);
+          const v = ss(0.90, 0.995, dd) * glow(rdist, u * 0.30) * (sgn > 0 ? 1.0 : 0.35) * edgeFade;
           if (v > 0.04) res = over(res, [clamp(v * 1.4, 0, 1), 0, 0.92]);
         }
       }
@@ -121,12 +122,12 @@
 
   add('balloon', '#2f6bd6', ['#ffd9c9', '#e85a4a'], 16, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
-    const bx = S(t, 1) * u * 0.05, by = u * 0.34 + S(t, 2, 0.3) * u * 0.012;
+    const bx = S(t, 1) * u * 0.035, by = u * 0.34 + S(t, 2, 0.3) * u * 0.012;
     let res = 0;
     const cl = fbm(X * 0.10 + t * 1.2, Y * 0.20, 4);
     if (cl > 0.56 && Y > u * 0.5) res = [ss(0.56, 0.80, cl) * 0.5, 0];
     if (Math.abs(X - bx) < u * 0.40 && Math.abs(Y - by) < u * 0.46) {
-      const rx = u * 0.195, ry = u * 0.225;
+      const rx = u * 0.165, ry = u * 0.20;
       const sdBal = (px, py) => {
         let d = sdE(px, py, bx, by, rx, ry);
         d = Math.min(d, sdBox(px, py, bx, by + ry + u * 0.065, u * 0.038, u * 0.026));
@@ -158,11 +159,11 @@
 
   add('kite', '#4a86e8', ['#fff3f0', '#e85a6a'], 12, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
-    const kx = u * 0.06 + S(t, 1) * u * 0.06, ky = u * 0.30 + S(t, 2, 0.2) * u * 0.03;
+    const kx = u * 0.05 + S(t, 1) * u * 0.03, ky = u * 0.30 + S(t, 2, 0.2) * u * 0.03;
     let res = 0;
     const cl = fbm(X * 0.12 + t * 1.4, Y * 0.22, 4);
     if (cl > 0.58) res = [ss(0.58, 0.82, cl) * 0.35, 0];
-    const kw = u * 0.125, kh = u * 0.175;
+    const kw = u * 0.105, kh = u * 0.16;
     if (Math.abs(X - kx) < u * 0.5 && Y > ky - u * 0.2 && Y < u * 0.95) {
       const sdKite = (px, py) => {
         const dx = Math.abs(px - kx), dy = Math.abs(py - ky);
@@ -222,10 +223,10 @@
       const dU = sdUpper(LX, LY), dL = sdLower(LX, LY);
       if (dU < 0.8 || dL < 0.8) {
         const len = 0.85 + 0.15 * ss(-L, L, LX);
-        let shU = shade(sdUpper, LX, LY, -0.45, -0.85) * 1.5 * len;
-        let shL = shade(sdLower, LX, LY, -0.45, -0.85) * 0.70 * len;
+        let shU = shade(sdUpper, LX, LY, -0.45, -0.85) * 1.75 * len;
+        let shL = shade(sdLower, LX, LY, -0.45, -0.85) * 0.52 * len;
         // dark seam along the fold between the two facets
-        if (Math.abs(LY) < u * 0.0022 && LX < L * 0.9 && LX > -L * 0.45) { shU *= 0.45; shL *= 0.45; }
+        if (Math.abs(LY) < u * 0.0035 && LX < L * 0.9 && LX > -L * 0.45) { shU *= 0.35; shL *= 0.35; }
         if (dU <= dL && shU > 0) res = over(res, [clamp(shU, 0, 1), 0]);
         else if (shL > 0) res = over(res, [clamp(shL, 0, 1), 1]);
       }

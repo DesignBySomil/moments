@@ -56,10 +56,10 @@
     const motes = drift(X, Y, t, { gain: 0.25, thresh: 0.9, speed: 0.8, twinkle: 2 });
     if (motes > 0) res = [motes, 1];
     if (bk) {
-      const bob = S(t, 2.2) * u * 0.02, hover = S(t, 0.5, 5) * u * 0.09;
+      const bob = S(t, 2.2) * u * 0.02, hover = S(t, 0.5, 5) * u * 0.025;
       const flut = 1 + 0.045 * S(t, 9);
-      const fw = u * 0.34 * flut, fh = u * 0.30, cy = u * 0.46 + bob;
-      const dx = X - hover, dy = Y - cy;
+      const fw = u * 0.24 * flut, fh = u * 0.30, cy = u * 0.46 + bob;
+      const dx = X - hover + fw * 0.282, dy = Y - cy;
       if (Math.abs(dx) <= fw && Math.abs(dy) <= fh) {
         const sx = dx / (fw * 2) + 0.5, sy = dy / (fh * 2) + 0.5;
         const v0 = sampleBake(bk, sx * (bk.w - 1), sy * (bk.h - 1));

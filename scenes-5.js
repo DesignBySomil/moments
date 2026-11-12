@@ -6,12 +6,12 @@
 
   add('pendulum', '#101018', ['#d8d4e8', '#8a86a0'], 8, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
-    const px0 = 0, py0 = u * 0.12, L = u * 0.52, ang = S(t, 1) * 0.42;
+    const px0 = 0, py0 = u * 0.12, L = u * 0.52, ang = S(t, 1) * 0.26;
     const bx = px0 + Math.sin(ang) * L, by = py0 + Math.cos(ang) * L;
     let res = 0;
     const trailA = Math.atan2(X - px0, Y - py0);
     const trailR = Math.hypot(X - px0, Y - py0);
-    if (Math.abs(trailR - L) < u * 0.0035 && Math.abs(trailA) < 0.45 && Y > py0) res = over(res, [0.20, 1]);
+    if (Math.abs(trailR - L) < u * 0.0035 && Math.abs(trailA) < 0.30 && Y > py0) res = over(res, [0.20, 1]);
     const gbx = px0 + Math.sin(ang * 0.55) * L, gby = py0 + Math.cos(ang * 0.55) * L;
     if (sdC(X, Y, gbx, gby, u * 0.075) < 0) res = over(res, [0.18, 0]);
     const dBr = sdBox(X, Y, px0, py0 - u * 0.016, u * 0.055, u * 0.016);
@@ -109,7 +109,7 @@
 
   add('umbrella', '#1c2430', ['#e8d8b0', '#7a8aa0'], 10, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
-    const ux = 0, uy = u * 0.42, R = u * 0.24;
+    const ux = 0, uy = u * 0.42, R = u * 0.19;
     let res = 0;
     const st = vnoise(X * 1.9, Y * 0.30 - t * 22);
     if (st > 0.865 && Y < uy - R * 0.2) res = over(res, [ss(0.865, 0.94, st) * 0.6, 1]);

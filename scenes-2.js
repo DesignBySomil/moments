@@ -151,21 +151,33 @@
     const st = drift(X, Y, t, { scale: 0.55, thresh: 0.87, gain: 0.5, speed: 0.4, twinkle: 3 });
     if (Y < ridgeY && st > 0) res = over(res, [st, 1]);
     for (let k = 0; k < 4; k++) {
+      const hero = k === 0;
       const p = (t + k / 4) % 1;
-      if (p > 0.55) continue;
-      const hx = -cols * 0.45 / 1.06 + hash(k, 7) * cols * 0.5 + p * u * 0.9;
-      const hy = u * (0.08 + hash(k, 5) * 0.25) + p * u * 0.55;
+      const pMax = hero ? 0.42 : 0.55;
+      if (p > pMax) continue;
+      const hx = hero ? (-u * 0.16 + p * u * 0.55) : (-cols * 0.45 / 1.06 + hash(k, 7) * cols * 0.5 + p * u * 0.9);
+      const hy = u * (hero ? 0.14 : (0.08 + hash(k, 5) * 0.25)) + p * u * (hero ? 0.42 : 0.55);
       const dx = 0.86, dy = 0.5;
-      const fade = ss(0, 0.06, p) * (1 - ss(0.38, 0.55, p));
-      const dHead = sdC(X, Y, hx, hy, u * 0.013);
+      const fade = ss(0, 0.06, p) * (1 - ss(pMax * 0.7, pMax, p));
+      const dHead = sdC(X, Y, hx, hy, u * (hero ? 0.026 : 0.013));
       const rel = (X - hx) * -dx + (Y - hy) * -dy;
-      if (rel > 0 && rel < u * 0.26) {
+      const trailL = u * (hero ? 0.46 : 0.26);
+      if (rel > 0 && rel < trailL) {
         const perp = Math.abs((X - hx) * dy - (Y - hy) * dx);
-        const taper = 1 - rel / (u * 0.26);
-        const v = glow(perp, u * 0.006 * taper + 0.35) * taper * 1.1 * fade;
+        const taper = 1 - rel / trailL;
+        const v = glow(perp, u * (hero ? 0.011 : 0.006) * taper + 0.35) * taper * (hero ? 1.5 : 1.1) * fade;
         if (v > 0.05) res = over(res, [clamp(v, 0, 1), 0]);
       }
-      if (dHead < 2.2) { const v = glow(dHead, 1.6) * fade; if (v > 0.05) res = over(res, [clamp(v * 1.25, 0, 1), 0]); }
+      if (dHead < 2.2) { const v = glow(dHead, hero ? 2.6 : 1.6) * fade; if (v > 0.05) res = over(res, [clamp(v * 1.25, 0, 1), 0]); }
+      if (hero) { // hot core + ionized fork at the head
+        if (dHead < 0.5) res = over(res, [1.0, 0]);
+        const rel2 = rel - u * 0.10;
+        if (rel2 > 0 && rel2 < u * 0.30) {
+          const perp2 = Math.abs((X - hx) * dy - (Y - hy) * dx + u * 0.012);
+          const v2 = glow(perp2, u * 0.004 + 0.3) * (1 - rel2 / (u * 0.30)) * 0.5 * fade;
+          if (v2 > 0.06) res = over(res, [clamp(v2, 0, 1), 0]);
+        }
+      }
     }
     return res;
   });

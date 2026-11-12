@@ -101,23 +101,23 @@
     const flap = S(t, 2.2) * 0.5;
     if (Math.abs(X - bx) < u * 0.45 && Math.abs(Y - by) < u * 0.42) {
       for (const dir of [-1, 1]) {
-        const shx = bx + dir * u * 0.018, shy = by - u * 0.012;
+        const shx = bx + dir * u * 0.014, shy = by - u * 0.012;
         for (let j = 0; j < 3; j++) {
-          const L = u * (0.165 - j * 0.026), w = u * (0.015 - j * 0.002);
+          const L = u * (0.165 - j * 0.024), w = u * (0.026 - j * 0.004);
           const th = dir > 0 ? (-0.50 - j * 0.38 + flap * (0.9 - j * 0.15)) : (Math.PI + 0.50 + j * 0.38 - flap * (0.9 - j * 0.15));
           const ex = shx + Math.cos(th) * L, ey = shy + Math.sin(th) * L;
           const d = sdSeg(X, Y, shx, shy, ex, ey) - w;
           if (d < 0.7) {
             const m = ss(0.7, -0.4, d);
             const s = clamp(((X - shx) * Math.cos(th) + (Y - shy) * Math.sin(th)) / L, 0, 1);
-            const v = (0.88 - j * 0.20 - s * 0.34) * m;
+            const v = (0.95 - j * 0.30 - s * 0.30) * m;
             if (v > 0.05) res = over(res, [clamp(v, 0, 1), 0]);
           }
         }
       }
       const dTail = sdSeg(X, Y, bx - u * 0.045, by + u * 0.002, bx - u * 0.088, by + u * 0.008) - u * 0.012;
       if (dTail < 0.5) { const v = ss(0.5, -0.4, dTail) * 0.7; if (v > 0.05) res = over(res, [v, 0]); }
-      const dBody = sdE(X, Y, bx, by, u * 0.052, u * 0.019);
+      const dBody = sdE(X, Y, bx, by, u * 0.068, u * 0.028);
       if (dBody < 0.8) {
         const m = ss(0.8, -0.5, dBody);
         const v = (0.92 + 0.30 * ss(u * 0.02, -u * 0.02, Y - by)) * m;
