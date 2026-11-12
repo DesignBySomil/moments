@@ -115,10 +115,10 @@
     }
     const bob = S(t, 2, 0.1) * u * 0.003;
     // hero locomotive, cropped 3/4 front, nose right
-    const noseX = u * 0.20, boilY = u * 0.565 + bob, boilR = u * 0.078;
-    const cabX = -u * 0.175, cabY = u * 0.475 + bob;
+    const noseX = u * 0.17, boilY = u * 0.565 + bob, boilR = u * 0.078;
+    const cabX = -u * 0.148, cabY = u * 0.475 + bob;
     // boiler: big capsule with sculpted lighting
-    const sdBoiler = (px, py) => sdE(px, py, -u * 0.02, boilY, u * 0.235, boilR);
+    const sdBoiler = (px, py) => sdE(px, py, -u * 0.02, boilY, u * 0.20, boilR);
     const dB = sdBoiler(X, Y);
     if (dB < 1.2) {
       let v = clamp(0.55 + 0.65 * (0.5 - (Y - boilY) / (boilR * 1.4)), 0.10, 1.15); // hot crown, dark belly
@@ -126,45 +126,45 @@
       if (v > 0.04 && dB < 0.9) res = over(res, [clamp(v, 0, 1), 1]);
     }
     // smokebox: front disc, darker with lit rim
-    const dN = sdE(X, Y, noseX, boilY, u * 0.030, boilR * 0.94);
+    const dN = sdE(X, Y, noseX, boilY, u * 0.026, boilR * 0.94);
     if (dN < 0.9) {
       let v = 0.30 + 0.55 * ss(0, -u * 0.012, dN) * ss(-0.9, 0.6, (Y - boilY) / boilR);
       res = over(res, [clamp(v, 0, 1), 1]);
     }
     // boiler bands
-    for (const bxv of [-u * 0.10, 0, u * 0.10]) {
+    for (const bxv of [-u * 0.085, 0, u * 0.085]) {
       if (Math.abs(X - bxv) < u * 0.0035 && dB < 0 && (Y - boilY) < boilR * 0.55) res = over(res, [0.72, 0]);
     }
     // steam dome + chimney
-    if (sdE(X, Y, u * 0.015, boilY - boilR - u * 0.010, u * 0.020, u * 0.013) < 0.5) res = over(res, [0.85, 1]);
-    if (sdBox(X, Y, u * 0.135, boilY - boilR - u * 0.016, u * 0.011, u * 0.018) - u * 0.004 < 0.5) res = over(res, [0.75, 1]);
+    if (sdE(X, Y, u * 0.013, boilY - boilR - u * 0.010, u * 0.017, u * 0.013) < 0.5) res = over(res, [0.85, 1]);
+    if (sdBox(X, Y, u * 0.115, boilY - boilR - u * 0.016, u * 0.0095, u * 0.018) - u * 0.004 < 0.5) res = over(res, [0.75, 1]);
     // cab: taller box, warm two-pane window, rivet line
-    const sdCab = (px, py) => sdBox(px, py, cabX, cabY, u * 0.075, u * 0.088) - u * 0.008;
+    const sdCab = (px, py) => sdBox(px, py, cabX, cabY, u * 0.064, u * 0.088) - u * 0.008;
     const dC = sdCab(X, Y);
     if (dC < 0.9) {
       let v = clamp(0.62 - 0.55 * ss(cabY - u * 0.08, cabY + u * 0.09, Y), 0.14, 1);
-      v += 0.25 * ss(u * 0.008, 0, Math.abs(X - (cabX + u * 0.070)));
+      v += 0.25 * ss(u * 0.008, 0, Math.abs(X - (cabX + u * 0.060)));
       res = over(res, [clamp(v, 0, 1), 1]);
     }
-    if (sdBox(X, Y, cabX + u * 0.012, cabY - u * 0.040, u * 0.020, u * 0.024) < 0) res = over(res, [0.98, 0]);
-    if (sdBox(X, Y, cabX + u * 0.052, cabY - u * 0.040, u * 0.014, u * 0.024) < 0) res = over(res, [0.85, 0]);
+    if (sdBox(X, Y, cabX + u * 0.010, cabY - u * 0.040, u * 0.017, u * 0.024) < 0) res = over(res, [0.98, 0]);
+    if (sdBox(X, Y, cabX + u * 0.044, cabY - u * 0.040, u * 0.012, u * 0.024) < 0) res = over(res, [0.85, 0]);
     // cab roof
-    if (sdE(X, Y, cabX, cabY - u * 0.092, u * 0.082, u * 0.012) < 0.5) res = over(res, [0.9, 1]);
+    if (sdE(X, Y, cabX, cabY - u * 0.092, u * 0.070, u * 0.012) < 0.5) res = over(res, [0.9, 1]);
     // running board: bright step line under boiler
-    if (Math.abs(Y - (boilY + boilR + u * 0.006)) < 1.2 && X > -u * 0.26 && X < noseX + u * 0.01) res = over(res, [0.60, 1]);
+    if (Math.abs(Y - (boilY + boilR + u * 0.006)) < 1.2 && X > -u * 0.225 && X < noseX + u * 0.01) res = over(res, [0.60, 1]);
     // driving wheels with rotating spokes + connecting rod
     const wY = boilY + boilR + u * 0.038;
     const wa = t * 4;
-    const wheels = [[-u * 0.115, u * 0.052], [-u * 0.005, u * 0.052], [u * 0.145, u * 0.034]];
+    const wheels = [[-u * 0.098, u * 0.046], [-u * 0.004, u * 0.046], [u * 0.124, u * 0.030]];
     const crankPts = [];
     for (const [wx, wr] of wheels) {
-      const dW = sdC(X, Y, wx, wY + (wr === u * 0.034 ? u * 0.018 : 0), wr);
+      const dW = sdC(X, Y, wx, wY + (wr === u * 0.030 ? u * 0.018 : 0), wr);
       if (dW < 0.9) {
-        const sh = shade((qx, qy) => sdC(qx, qy, wx, wY + (wr === u * 0.034 ? u * 0.018 : 0), wr), X, Y, -0.4, -0.8);
+        const sh = shade((qx, qy) => sdC(qx, qy, wx, wY + (wr === u * 0.030 ? u * 0.018 : 0), wr), X, Y, -0.4, -0.8);
         if (sh > 0) res = over(res, [clamp(sh * 0.75 + 0.06, 0, 1), 1]);
       }
-      if (sdC(X, Y, wx, wY + (wr === u * 0.034 ? u * 0.018 : 0), wr * 0.28) < 0.5) res = over(res, [0.7, 0]);
-      if (wr === u * 0.052) {
+      if (sdC(X, Y, wx, wY + (wr === u * 0.030 ? u * 0.018 : 0), wr * 0.28) < 0.5) res = over(res, [0.7, 0]);
+      if (wr === u * 0.046) {
         for (let s = 0; s < 5; s++) {
           const a2 = wa + s * TAU / 5;
           const dS = sdSeg(X, Y, wx, wY, wx + Math.cos(a2) * wr * 0.88, wY + Math.sin(a2) * wr * 0.88) - u * 0.0022;
@@ -179,20 +179,20 @@
       if (dR < 0.5) res = over(res, [0.80, 0]);
     }
     // headlight + beam
-    const hx = noseX + u * 0.030, hy = boilY - u * 0.010;
+    const hx = noseX + u * 0.026, hy = boilY - u * 0.010;
     if (sdBox(X, Y, hx, hy, u * 0.010, u * 0.012) - u * 0.003 < 0.5) res = over(res, [0.95, 0]);
     const dh = sdC(X, Y, hx + u * 0.008, hy, u * 0.007);
     if (dh < 2.5) { const v = glow(dh, 1.4); if (v > 0.05) res = over(res, [clamp(v * 1.4, 0, 1), 0]); }
     const rel = X - hx;
-    if (rel > 0 && rel < u * 0.13) {
+    if (rel > 0 && rel < u * 0.05) {
       const spread = u * 0.006 + rel * 0.42;
       const perp = Math.abs(Y - hy - rel * 0.28);
-      if (perp < spread) { const v = (1 - perp / spread) * (1 - rel / (u * 0.13)) * 0.5; if (v > 0.04) res = over(res, [v, 0]); }
+      if (perp < spread) { const v = (1 - perp / spread) * (1 - rel / (u * 0.05)) * 0.5; if (v > 0.04) res = over(res, [v, 0]); }
     }
     // steam puffs from chimney, rising and drifting left
     for (let k = 0; k < 5; k++) {
       const pp = (t * 0.7 + k / 5) % 1;
-      const sx = u * 0.135 - pp * u * 0.16 + fbm(k * 3.3, t, 2) * u * 0.03;
+      const sx = u * 0.115 - pp * u * 0.14 + fbm(k * 3.3, t, 2) * u * 0.03;
       const sy = boilY - boilR - u * 0.035 - pp * u * 0.20;
       const sr = u * (0.014 + pp * 0.030);
       const ds = sdC(X, Y, sx, sy, sr);
