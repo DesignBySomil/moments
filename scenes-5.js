@@ -73,11 +73,11 @@
       const fy = u * (0.15 + vnoise(k * 3.1 + 50, t * 0.5 + ph) * (layer === 0 ? 0.40 : 0.60));
       const pulse = Math.pow(B(t, 1.5, hash(k, 8)), 2);
       if (pulse < 0.02) continue;
-      const rr = layer === 2 ? u * 0.014 : (layer === 1 ? u * 0.007 : u * 0.0035);
+      const rr = layer === 2 ? u * 0.022 : (layer === 1 ? u * 0.010 : u * 0.005);
       const d = sdC(X, Y, fx, fy, rr);
-      if (d < 4.5) {
-        const v = glow(d, layer === 2 ? 2.2 : (layer === 1 ? 1.5 : 1.0)) * pulse;
-        if (v > 0.05) res = over(res, [clamp(v * 1.3, 0, 1), 0]);
+      if (d < 5.5) {
+        const v = glow(d, layer === 2 ? 3.0 : (layer === 1 ? 2.0 : 1.3)) * pulse;
+        if (v > 0.05) res = over(res, [clamp(v * 1.5, 0, 1), 0]);
       }
       if (layer === 2 && pulse > 0.3) {
         // hero: tiny body with wing hint inside the glow
@@ -157,7 +157,7 @@
     const st = drift(X, Y, t, { scale: 0.5, thresh: 0.93, gain: 0.35, speed: 0.4, twinkle: 2 });
     if (st > 0) res = [st, 1];
     // moon with halo, upper right
-    const mx = u * 0.17, my = u * 0.13;
+    const mx = u * 0.115, my = u * 0.15;
     const dM = sdC(X, Y, mx, my, u * 0.045);
     if (dM < 7) { const v = glow(dM, 3.2); if (v > 0.04) res = over(res, [clamp(v, 0, 1) * 0.8, 0]); }
     if (dM < 0) {
@@ -177,9 +177,9 @@
     // frame: top bar + angled legs, shaded with moon rim
     const frameParts = [[-W, by, W, by], [-W, by, -W - u * 0.055, gy], [W, by, W + u * 0.055, gy]];
     for (const [x0, y0, x1, y1] of frameParts) {
-      const sdF = (px, py) => sdSeg(px, py, x0, y0, x1, y1) - u * 0.009;
+      const sdF = (px, py) => sdSeg(px, py, x0, y0, x1, y1) - u * 0.016;
       const dF = sdF(X, Y);
-      if (dF < 0.8) {
+      if (dF < 1.0) {
         const sh = shade(sdF, X, Y, 0.5, -0.75);
         if (sh > 0) res = over(res, [clamp(sh * 1.2 + 0.05, 0, 1), 1]);
       }
@@ -202,10 +202,11 @@
       }
     }
     // wooden plank: three boards, hot moonlit top edge, dark underside
-    const sdSeat = (px, py) => sdBox(px, py, sx, sy, u * 0.062, u * 0.010) - u * 0.004;
+    const sdSeat = (px, py) => sdBox(px, py, sx, sy, u * 0.062, u * 0.017) - u * 0.004;
     const dS = sdSeat(X, Y);
     if (dS < 0.8) {
-      let v = clamp(0.95 - 0.85 * ss(-u * 0.010, u * 0.012, Y - sy), 0.12, 1);
+      let v = clamp(0.98 - 1.05 * ss(-u * 0.016, u * 0.020, Y - sy), 0.10, 1);
+      if (Y < sy - u * 0.010) v = Math.min(1, v + 0.25);
       if (Math.abs(X - sx - u * 0.021) < u * 0.0016 || Math.abs(X - sx + u * 0.021) < u * 0.0016) v *= 0.45; // board seams
       if (v > 0.04) res = over(res, [clamp(v, 0, 1), 0]);
     }
