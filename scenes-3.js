@@ -52,7 +52,7 @@
 
   add('lighthouse', '#0e2438', ['#f2f6ff', '#8fb6d8'], 12, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
-    const lx = u * 0.10, lampY = u * 0.26, baseY = u * 0.68;
+    const lx = 0, lampY = u * 0.26, baseY = u * 0.68;
     let res = 0;
     const st = drift(X, Y, t, { scale: 0.5, thresh: 0.9, gain: 0.4, speed: 0.4 });
     if (st > 0) res = [st, 1];
