@@ -11,28 +11,26 @@
   add('waves', '#071f38', ['#bfe0ff', '#4a7fb8'], 12, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     let res = 0;
-    if (Y < u * 0.16) {
+    if (Y < u * 0.14) {
       const s = drift(X, Y, t, { gain: 0.14, thresh: 0.93, speed: 0.8 });
       if (s > 0) res = [s, 1];
     }
-    // rolling swell: four bands, hot surface line, bright foam on crest peaks, dark troughs
-    for (let L = 0; L < 4; L++) {
-      const baseY = u * (0.30 + L * 0.150);
-      const k1 = 0.030 + L * 0.009, sp = 0.9 + L * 0.28, ph = L * 1.9;
+    // rolling swell: bright continuous crest lines, dim faces, near-black troughs
+    for (let L = 0; L < 3; L++) {
+      const baseY = u * (0.34 + L * 0.19);
+      const k1 = 0.030 + L * 0.010, sp = 1.0 + L * 0.3, ph = L * 2.1;
       const w1 = S(t, sp, ph + X * k1);
-      const yl = baseY + u * (0.026 + L * 0.007) * w1 + u * 0.007 * S(t, 1.9, ph * 2 + X * 0.10);
+      const w2 = S(t, 2.1, ph * 1.7 + X * 0.11);
+      const yl = baseY + u * (0.034 + L * 0.008) * w1 + u * 0.009 * w2;
       const d = Y - yl;
-      if (d < 0) continue;
-      const crest = ss(u * 0.045, u * 0.004, d);
+      if (d < -u * 0.012 || d > u * 0.15) continue;
+      const line = glow(Math.abs(d + u * 0.002), u * 0.0055);
+      const face = ss(u * 0.13, u * 0.004, d) * (0.30 - L * 0.05);
       const peak = ss(0.55, 0.95, w1);
-      const foamTex = vnoise(X * 1.4, Y * 1.4 + t * 5 + L * 7);
-      const fade = ss(u * 0.20, u * 0.11, d);
-      const body = ss(0, u * 0.09, d) * (0.34 - L * 0.055) * fade;
-      let v = body + crest * (0.42 - L * 0.04) * (0.35 + 0.65 * fade), ink = 1;
-      if (crest > 0.4 && peak > 0.15 && foamTex > 0.45) {
-        v += crest * peak * 0.55 * ss(0.45, 0.75, foamTex);
-        ink = 0;
-      }
+      const foamTex = vnoise(X * 1.5, Y * 1.5 + t * 5 + L * 7);
+      const foam = (d < u * 0.01 && d > -u * 0.012) ? peak * ss(0.42, 0.7, foamTex) * 0.6 : 0;
+      const v = Math.max(line * (0.95 - L * 0.12), face) + foam;
+      const ink = (line > 0.45 || foam > 0.25) ? 0 : 1;
       if (v > 0.03 && (!res || v > res[0])) res = [clamp(v, 0, 1), ink];
     }
     return res;

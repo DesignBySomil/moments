@@ -87,7 +87,7 @@
     if (cl > 0.60 && Y < u * 0.62) return [ss(0.60, 0.82, cl) * 0.25, 1];
     const st = drift(X, Y, t, { gain: 0.25, thresh: 0.90, speed: 0.5, wind: 6, twinkle: 3 });
     if (st > 0) return [st, 1];
-    // distant birds: small V silhouettes
+    // distant gulls: small V silhouettes
     for (let k = 0; k < 3; k++) {
       const bx = -u * 0.30 + k * u * 0.11 + S(t, 0.5, k) * u * 0.02;
       const by = u * (0.14 + hash(k, 4) * 0.10) + S(t, 2, k) * u * 0.008;
@@ -95,40 +95,42 @@
           sdSeg(X, Y, bx, by - u * 0.003, bx + u * 0.013, by + u * 0.004) < 0.7)
         return [0.5, 1];
     }
-    // hero bird: tapered body + head + beak + tail, one broad clean wing per side
-    const cx = S(t, 1) * u * 0.04, cy = u * 0.40 + S(t, 2, 0.7) * u * 0.018;
-    const flap = S(t, 5);
-    const sdBody = (px, py) => {
-      let d = sdE(px, py, cx, cy, u * 0.060, u * 0.025);
-      d = Math.min(d, sdE(px, py, cx + u * 0.064, cy - u * 0.022, u * 0.022, u * 0.017));
-      d = Math.min(d, sdTri(px, py, cx + u * 0.082, cy - u * 0.026, cx + u * 0.110, cy - u * 0.019, cx + u * 0.082, cy - u * 0.011));
-      d = Math.min(d, sdTri(px, py, cx - u * 0.046, cy - u * 0.011, cx - u * 0.118, cy + u * 0.002, cx - u * 0.046, cy + u * 0.010));
-      return d;
-    };
+    // hero gull: soaring toward the viewer, slightly banked, kinked gull wings
+    const bank = S(t, 1.3) * 0.12;
+    const flap = S(t, 4);
+    const bcx = S(t, 1) * u * 0.04, bcy = u * 0.40 + S(t, 2, 0.7) * u * 0.018;
+    const cb = Math.cos(bank), sb = Math.sin(bank);
+    const PX = (X - bcx) * cb + (Y - bcy) * sb;
+    const PY = -(X - bcx) * sb + (Y - bcy) * cb;
     let res = 0;
-    const L = u * 0.105;
-    for (let s = -1; s <= 1; s += 2) {
-      const far = s < 0;
-      const a = 0.20 + flap * (far ? 0.70 : 0.95) + (far ? 0.35 : 0);
-      const th = s > 0 ? -a : Math.PI + a;
-      const ux = Math.cos(th), uy = Math.sin(th);
-      const shx = cx + s * u * 0.006, shy = cy - u * 0.020;
-      const wx = (X - shx) * ux + (Y - shy) * uy;
-      const wy = -(X - shx) * uy + (Y - shy) * ux;
-      if (wx > -1 && wx < L) {
-        const chord = u * 0.024 * (1 - 0.78 * clamp(wx / L, 0, 1));
-        const dW = Math.abs(wy) - Math.max(chord, u * 0.003);
-        if (dW < 0.8) {
-          let v = glow(dW, u * 0.004);
-          if (far) v *= 0.45; else v *= 0.80 + 0.20 * ss(L, 0, wx);
-          if (v > 0.06) res = over(res, [clamp(v, 0, 1), far ? 1 : 0]);
+    if (Math.abs(PX) < u * 0.18 && Math.abs(PY) < u * 0.16) {
+      const dih = 0.42 + flap * 0.50;
+      const L1 = u * 0.055, L2 = u * 0.062;
+      for (let s = -1; s <= 1; s += 2) {
+        const shx = s * u * 0.010, shy = -u * 0.006;
+        const a1 = dih, a2 = dih * 0.45;
+        const ex = shx + s * Math.cos(a1) * L1, ey = shy - Math.sin(a1) * L1;
+        const tx2 = ex + s * Math.cos(a2) * L2, ty2 = ey - Math.sin(a2) * L2;
+        // tapered quad per panel: wide at shoulder, pointed at elbow/tip
+        const d1 = Math.min(
+          sdTri(PX, PY, shx, shy - u * 0.015, shx, shy + u * 0.015, ex, ey + u * 0.004),
+          sdTri(PX, PY, shx, shy - u * 0.015, ex, ey + u * 0.004, ex, ey - u * 0.007));
+        const d2 = sdTri(PX, PY, ex, ey - u * 0.007, ex, ey + u * 0.006, tx2, ty2);
+        const dW = Math.min(d1, d2);
+        if (dW < 0.9) {
+          const span = clamp((Math.abs(PX) - u * 0.010) / (L1 + L2), 0, 1);
+          const v = glow(dW, u * 0.0025) * (1.0 - 0.30 * span);
+          if (v > 0.06) res = over(res, [clamp(v, 0, 1), 0]);
         }
       }
-    }
-    const dB = sdBody(X, Y);
-    if (dB < 1.0) {
-      const sh = shade(sdBody, X, Y, -0.45, -0.85);
-      if (sh > 0) res = over(res, [clamp(0.55 + 0.45 * sh, 0, 1), 0]);
+      // body + head, viewed head-on
+      const dBo = Math.min(
+        sdE(PX, PY, 0, u * 0.006, u * 0.013, u * 0.024),
+        sdC(PX, PY, 0, -u * 0.024, u * 0.011));
+      if (dBo < 0.9) { const v = glow(dBo, u * 0.0025); if (v > 0.06) res = over(res, [clamp(v, 0, 1), 0]); }
+      // tail fan
+      const dT = sdTri(PX, PY, -u * 0.011, u * 0.026, u * 0.011, u * 0.026, 0, u * 0.048);
+      if (dT < 0.9) { const v = glow(dT, u * 0.002) * 0.85; if (v > 0.06) res = over(res, [clamp(v, 0, 1), 0]); }
     }
     return res;
   });
