@@ -8,7 +8,7 @@ source image listed here. Quantized luminance only; no original pixels are redis
 | bloom | photo (images.unsplash.com) | Unsplash contributor | Unsplash License (free for commercial use, no permission needed) | https://unsplash.com/photos/a-single-red-rose-on-a-black-background-i-4diA-_2ng |
 | balloon | Balloon Fest Composite Just for fun | Harry Pherson | CC BY 2.0 | https://www.flickr.com/photos/32559259@N06/9743213598 |
 | butterfly | Monarchback_2019-08-11-12.38.41 ZS PMax UDR | Sam Droege | Public Domain Mark 1.0 | https://www.flickr.com/photos/54563451@N08/48555491036 |
-| campfire | A close-up view of a campfire with brightly burning flames against a dark background. | Abhinav Singh | CC0 1.0 | https://wordpress.org/photos/photo/44267a96f2/ |
+| campfire | Procedural flame (code-generated, no external source) - replaces the earlier CC0 photo bake, which was unreadable at 68 columns | - | - | - |
 | candle | Candle light silhouette | Frank Morales R | CC BY-SA 2.0 | https://www.flickr.com/photos/28998097@N07/4215881289 |
 | cycle | Bicycle silhouette collage element vector | None | CC0 1.0 | https://www.rawpixel.com/image/11729426/vector-collage-cartoon-illustrations |
 | dandelion | Dandelion sunset | Holly Norval | CC BY 2.0 | https://www.flickr.com/photos/63833161@N05/14128839257 |
