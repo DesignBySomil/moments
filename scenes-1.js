@@ -178,7 +178,7 @@
     let res = 0;
     if (Y > gy + u * 0.004) {
       const dash = Y < gy + u * 0.035 ? (((X * 0.5 + t * 90) % 9 + 9) % 9 < 2.2 ? 0.22 : 0) : 0;
-      res = [0.19 + dash + 0.10 * (fbm(X * 0.9, Y * 0.9, 2) - 0.5), 1];
+      res = [0.22 + dash + 0.10 * (fbm(X * 0.9, Y * 0.9, 2) - 0.5), 1];
     }
     // night streetlamp: pole, hot head, halo, light pool on the road
     const lpX = -u * 0.155, lpTop = u * 0.30;
@@ -191,7 +191,7 @@
     if (sdSeg(X, Y, lpX, lpTop, lpX + u * 0.045, lpTop - u * 0.012) - u * 0.005 < 0.5) res = over(res, [0.7, 1]);
     const lampX = lpX + u * 0.050, lampY = lpTop - u * 0.016;
     const dLamp = sdC(X, Y, lampX, lampY, u * 0.011);
-    if (dLamp < 6) { const v = glow(dLamp, 2.6); if (v > 0.04) res = over(res, [clamp(v * 1.5, 0, 1), 0]); }
+    if (dLamp < 6) { const v = glow(dLamp, 2.6); if (v > 0.04) res = over(res, [clamp(v * 1.7, 0, 1), 0]); }
     if (sdE(X, Y, lampX + u * 0.05, gy + u * 0.012, u * 0.13, u * 0.014) < 0) res = over(res, [0.38, 0]);
     const bounce = S(t, 4) * u * 0.005;
     const r = u * 0.082, wy = gy - r + bounce;
@@ -205,9 +205,9 @@
       const dR = sdRing(X, Y);
       if (dR < 0.8) {
         const sh = shade(sdRing, X, Y, -0.45, -0.8);
-        if (sh > 0) res = over(res, [clamp(sh * 1.45, 0, 1), 1]);
+        if (sh > 0) res = over(res, [clamp(sh * 1.7, 0, 1), 1]);
       }
-      if (sdC(X, Y, wx, wy, u * 0.011) < 0.5) res = over(res, [0.85, 1]);
+      if (sdC(X, Y, wx, wy, u * 0.011) < 0.5) res = over(res, [0.9, 1]);
       for (let s = 0; s < 8; s++) {
         const a = t * 6 + s * Math.PI / 4;
         const dS = sdSeg(X, Y, wx, wy, wx + Math.cos(a) * r * 0.92, wy + Math.sin(a) * r * 0.92) - u * 0.0016;
@@ -222,7 +222,7 @@
       const dT = sdT(X, Y);
       if (dT < 0.8) {
         const sh = shade(sdT, X, Y, -0.45, -0.8);
-        if (sh > 0) res = over(res, [clamp(sh * 1.6, 0, 1), 0]);
+        if (sh > 0) res = over(res, [clamp(sh * 1.85, 0, 1), 0]);
       }
     }
     // saddle + handlebar

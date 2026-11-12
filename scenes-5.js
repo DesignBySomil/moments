@@ -40,7 +40,7 @@
     return res;
   });
 
-  add('fireflies', '#0a120c', ['#d8ff9a', '#5f8a5a'], 14, (x, y, t, cols, rows) => {
+  add('fireflies', '#060a07', ['#d8ff9a', '#4a6b46'], 14, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     let res = 0;
     // distant tree line silhouette
@@ -52,7 +52,7 @@
     const bushY = u * 0.62 + fbm(X * 0.15, 5.5, 3) * u * 0.10;
     if (Y > bushY) {
       const blades = vnoise(X * 3.2, Y * 0.8) > 0.72 ? 0.35 : 0;
-      res = over(res, [0.30 + blades + 0.15 * fbm(X * 0.8, Y * 0.8, 2), 1]);
+      res = over(res, [0.22 + blades + 0.12 * fbm(X * 0.8, Y * 0.8, 2), 1]);
     }
     // individual foreground grass blades with lit tips
     for (let k = 0; k < 9; k++) {
@@ -77,7 +77,7 @@
       const d = sdC(X, Y, fx, fy, rr);
       if (d < 5.5) {
         const v = glow(d, layer === 2 ? 3.0 : (layer === 1 ? 2.0 : 1.3)) * pulse;
-        if (v > 0.05) res = over(res, [clamp(v * 1.5, 0, 1), 0]);
+        if (v > 0.05) res = over(res, [clamp(v * 1.7, 0, 1.5), 0]);
       }
       if (layer === 2 && pulse > 0.3) {
         // hero: tiny body with wing hint inside the glow
@@ -85,7 +85,7 @@
       }
     }
     return res;
-  });
+  }, { bloom: true });
 
   add('aurora', '#060b1a', ['#7affc9', '#b47aff'], 16, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;

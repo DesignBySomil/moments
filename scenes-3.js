@@ -23,12 +23,12 @@
         return Math.max(e(ax, ay, bx, by), e(bx, by, cx, cy), e(cx, cy, ax, ay)) / (u * 0.3);
       };
       const sh = shade(sdHouse, X, Y, -0.4, -0.85);
-      if (sh > 0) res = over(res, [clamp(sh * 1.5, 0, 1), 1]);
+      if (sh > 0) res = over(res, [clamp(sh * 1.9, 0, 1), 1]);
       const winD = sdBox(X, Y, hx - hw * 0.4, (ht + hb) / 2, u * 0.022, u * 0.022);
       if (winD < 0) res = over(res, [1.0, 2]);
       const w2 = sdBox(X, Y, hx + hw * 0.4, (ht + hb) / 2, u * 0.022, u * 0.022);
       if (w2 < 0) res = over(res, [0.85, 2]);
-      for (const [wx, wv] of [[hx - hw * 0.4, 0.26], [hx + hw * 0.4, 0.20]]) {
+      for (const [wx, wv] of [[hx - hw * 0.4, 0.36], [hx + hw * 0.4, 0.28]]) {
         const wg = glow(sdE(X, Y, wx, (ht + hb) / 2, u * 0.045, u * 0.040), u * 0.016) * wv;
         if (wg > 0.04) res = over(res, [clamp(wg, 0, 1), 2]);
       }
@@ -64,9 +64,9 @@
       const dot = (rx * bdx + ry * bdy) / rdist;
       for (const sgn of [1, -0.35]) {
         const dd = sgn > 0 ? dot : -dot;
-        if (dd > 0.88) {
+        if (dd > 0.84) {
           const edgeFade = clamp((28.3 - Math.abs(X)) / 5.7, 0, 1);
-          const v = ss(0.88, 0.995, dd) * glow(rdist, u * 0.30) * (sgn > 0 ? 1.0 : 0.35) * edgeFade;
+          const v = ss(0.84, 0.995, dd) * glow(rdist, u * 0.30) * (sgn > 0 ? 1.0 : 0.45) * edgeFade;
           if (v > 0.04) res = over(res, [clamp(v * 1.6, 0, 1), 0, 0.92]);
         }
       }
@@ -87,16 +87,16 @@
       };
       const sh = shade(sdTower, X, Y, -0.6, -0.7);
       if (sh > 0) res = over(res, [clamp(sh * 1.2, 0, 1), 0]);
-      if (sdE(X, Y, lx, lampY - u * 0.018, u * 0.020, u * 0.020) < 0) res = over(res, [1, 0]);
+      if (sdE(X, Y, lx, lampY - u * 0.018, u * 0.020, u * 0.020) < 0) res = over(res, [1.5, 0]);
       const dLG = sdC(X, Y, lx, lampY - u * 0.018, 0);
-      res = over(res, [glow(dLG, u * 0.022) * 0.55, 0]);
+      res = over(res, [glow(dLG, u * 0.030) * 0.8, 0]);
     }
     if (Y > baseY - 2) {
       const wv = waveField(X, Y, baseY + u * 0.01, t, { gain: 0.5, amp: u * 0.008, freq: 0.06, deep: u * 0.12 });
       if (wv > 0) res = over(res, [wv, 1]);
     }
     return res;
-  });
+  }, { bloom: true });
 
   add('lantern', '#191008', ['#ffca7a', '#a8763a'], 12, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
@@ -133,10 +133,10 @@
     const cl = fbm(X * 0.10 + t * 1.2, Y * 0.20, 4);
     if (cl > 0.56 && Y > u * 0.5) res = [ss(0.56, 0.80, cl) * 0.5, 0];
     if (Math.abs(X - bx) < u * 0.40 && Math.abs(Y - by) < u * 0.46) {
-      const rx = u * 0.165, ry = u * 0.20;
+      const rx = u * 0.150, ry = u * 0.220;
       const sdBal = (px, py) => {
         const ey = clamp((py - by) / ry, -1, 1);
-        const widen = ey < 0 ? 1 + 0.12 * -ey : 1 - 0.28 * ey;
+        const widen = ey < 0 ? 1 + 0.16 * -ey : 1 - 0.36 * ey;
         let d = sdE(px, py, bx, by, rx * widen, ry);
         d = Math.min(d, sdBox(px, py, bx, by + ry + u * 0.065, u * 0.038, u * 0.026));
         d = Math.min(d, sdSeg(px, py, bx - rx * 0.55, by + ry * 0.75, bx - u * 0.030, by + ry + u * 0.045) - u * 0.004);
@@ -153,7 +153,7 @@
           v *= clamp(1.10 - 0.42 * ss(-0.9, 1.0, q), 0.62, 1.10);
           v += 0.55 * glow(sdE(X, Y, bx - rx * 0.38, by - ry * 0.38, rx * 0.26, ry * 0.20), u * 0.018);
           const bandA = Math.atan2((X - bx) * (ry / rx), (Y - by));
-          if (Math.sin(bandA * 4) > 0) { ink = 1; v *= 0.88; }
+          if (Math.sin(bandA * 4) > 0) { ink = 1; v *= 0.80; }
         } else {
           // basket and rigging below the envelope: darker red, woven
           ink = 1;
