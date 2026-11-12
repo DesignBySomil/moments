@@ -29,7 +29,7 @@
     const e = o * o * (3 - 2 * o);
     const amb = () => { const a = drift(X, Y, t, { gain: 0.14, thresh: 0.94, speed: 2 }); return a ? [a * e, 0, 0.5] : 0; };
     const grow = (0.40 + 0.60 * e) * (1 + 0.010 * Math.sin(t * TAU * 2));
-    const fw = u * 0.30 * grow, fh = u * 0.33 * grow;
+    const fw = u * 0.235 * grow, fh = u * 0.33 * grow;
     const dx = X, dy = Y - cyc, r = Math.hypot(dx, dy);
     if (Math.abs(dx) > fw * 1.15 || Math.abs(dy) > fh * 1.15) return amb();
     const swirl = (1 - e) * 0.5;
