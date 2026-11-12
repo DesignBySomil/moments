@@ -33,23 +33,40 @@
 
 
   add('campfire', '#120b06', ['#ffb04a', '#c9b8a8'], 9, (x, y, t, cols, rows) => {
-    const bk = getBake('campfire');
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     let res = 0;
-    if (bk) {
-      const flick = 0.90 + 0.10 * S(t, 5) + 0.08 * (vnoise(t * 11, 7.7) - 0.5);
-      const wob = S(t, 3) * 0.006 + (vnoise(t * 7, 3.1) - 0.5) * 0.010;
-      const fw = u * 0.29, fh = u * 0.31, cy = u * 0.52;
-      const dx = X, dy = Y - cy;
-      if (Math.abs(dx) <= fw && Math.abs(dy) <= fh) {
-        let sx = dx / (fw * 2) + 0.5 + wob * (1 - (dy / (fh * 2) + 0.5));
-        const sy = dy / (fh * 2) + 0.5;
-        if (sx >= 0 && sx <= 1) {
-          const v0 = sampleBake(bk, sx * (bk.w - 1), sy * (bk.h - 1));
-          const v = clamp((v0 * flick - 0.16) * 1.9, 0, 1);
-          if (v > 0.14) res = over(res, [v, 0]);
-        }
+    // procedural flame: 3 nested teardrop layers, independent sway, hot core
+    const base = u * 0.74;
+    const layers = [
+      [u * 0.150, u * 0.46, 0.42, 2.1],
+      [u * 0.105, u * 0.36, 0.68, 4.7],
+      [u * 0.058, u * 0.24, 1.00, 8.3]];
+    if (Y < base + 2 && Y > base - u * 0.5 && Math.abs(X) < u * 0.35) {
+      for (let i = 0; i < 3; i++) {
+        const [w, h, bright, ph] = layers[i];
+        const ty = (base - Y) / h;
+        if (ty <= 0 || ty >= 1) continue;
+        const sway = S(t, 2.6 + i * 0.7, ph) * (0.10 + ty * 0.38) * w + S(t, 6 + i, ph * 1.7) * ty * w * 0.22;
+        const wshape = w * Math.sin(Math.PI * Math.pow(ty, 0.72));
+        const d = Math.abs(X - sway) / Math.max(wshape, 0.001);
+        const v = (1 - d * d) * bright * (0.86 + 0.14 * S(t, 5.2, ph));
+        if (v > 0.10) res = over(res, [clamp(v, 0, 1), 0]);
       }
+      // twin side wisps
+      for (let k = 0; k < 2; k++) {
+        const dir = k === 0 ? -1 : 1;
+        const ty = (base - Y) / (u * 0.22);
+        if (ty <= 0 || ty >= 1) continue;
+        const sway = S(t, 3.4, k * 5.1) * ty * u * 0.03;
+        const cx = dir * u * 0.115 + sway;
+        const wshape = u * 0.030 * Math.sin(Math.PI * ty);
+        const d = Math.abs(X - cx) / Math.max(wshape, 0.001);
+        const v = (1 - d * d) * 0.3 * (0.7 + 0.3 * S(t, 4.4, k * 3.3));
+        if (v > 0.12) res = over(res, [clamp(v, 0, 1), 0]);
+      }
+      // log base
+      const dl = sdE(X, Y, 0, base + u * 0.006, u * 0.16, u * 0.022);
+      if (dl < 0) res = over(res, [0.30 + 0.1 * fbm(X * 1.4, Y * 1.4, 2), 0]);
     }
     for (let k = 0; k < 6; k++) {
       const p = (t * 0.9 + hash(k, 1)) % 1;
