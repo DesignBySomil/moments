@@ -182,12 +182,12 @@
       if (rel > 0 && rel < trailL) {
         const perp = Math.abs((X - hx) * dy - (Y - hy) * dx);
         const taper = 1 - rel / trailL;
-        const v = glow(perp, u * (hero ? 0.011 : 0.006) * taper + 0.35) * taper * (hero ? 1.5 : 1.1) * fade;
+        const v = glow(perp, u * (hero ? 0.011 : 0.006) * taper + 0.35) * taper * (hero ? 1.8 : 1.1) * fade;
         if (v > 0.05) res = over(res, [clamp(v, 0, 1), 0]);
       }
-      if (dHead < 2.2) { const v = glow(dHead, hero ? 2.6 : 1.6) * fade; if (v > 0.05) res = over(res, [clamp(v * 1.25, 0, 1), 0]); }
+      if (dHead < 2.2) { const v = glow(dHead, hero ? 2.6 : 1.6) * fade; if (v > 0.05) res = over(res, [clamp(v * 1.4, 0, 1.5), 0]); }
       if (hero) { // hot core + ionized fork at the head
-        if (dHead < 0.5) res = over(res, [1.0, 0]);
+        if (dHead < 0.5) res = over(res, [1.5, 0]);
         const rel2 = rel - u * 0.10;
         if (rel2 > 0 && rel2 < u * 0.30) {
           const perp2 = Math.abs((X - hx) * dy - (Y - hy) * dx + u * 0.012);
@@ -197,7 +197,7 @@
       }
     }
     return res;
-  });
+  }, { bloom: true });
 
   add('dandelion', '#101a12', ['#eef5e6', '#8fbf8a'], 14, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
@@ -207,7 +207,7 @@
     // stem: two-segment curve from the ground to the puff base
     const sx0 = u * 0.035, sy0 = u * 0.99, sx1 = u * 0.014, sy1 = u * 0.72;
     const dStem = Math.min(sdSeg(X, Y, sx0, sy0, sx1, sy1), sdSeg(X, Y, sx1, sy1, cx, cy + R * 0.95));
-    if (dStem < 1.4) { const v = glow(dStem, u * 0.004) * 0.6; if (v > 0.05) res = over(res, [clamp(v, 0, 1), 1]); }
+    if (dStem < 1.4) { const v = glow(dStem, u * 0.004) * 0.75; if (v > 0.05) res = over(res, [clamp(v, 0, 1), 1]); }
     // small leaf on the lower stem
     {
       const la = -0.65, ca = Math.cos(la), sa = Math.sin(la);
@@ -229,14 +229,14 @@
         const tw = 0.85 + 0.15 * S(t, 1.4, hash(k, 9));
         const d = sdSeg(X, Y, ix, iy, ex, ey);
         if (d < 1.6) {
-          const v = glow(d, u * 0.0030) * (0.30 + 0.70 * face) * tw;
+          const v = glow(d, u * 0.0030) * (0.45 + 0.70 * face) * tw;
           if (v > 0.06) res = over(res, [clamp(v, 0, 1), 0]);
         }
         if (sdC(X, Y, ex, ey, u * 0.012) < 1.5) {
           const hl = u * 0.010, a1 = a + Math.PI / 4, a2 = a - Math.PI / 4;
           const d1 = sdSeg(X, Y, ex - Math.cos(a1) * hl, ey - Math.sin(a1) * hl, ex + Math.cos(a1) * hl, ey + Math.sin(a1) * hl);
           const d2 = sdSeg(X, Y, ex - Math.cos(a2) * hl, ey - Math.sin(a2) * hl, ex + Math.cos(a2) * hl, ey + Math.sin(a2) * hl);
-          const v = glow(Math.min(d1, d2), u * 0.0030) * (0.45 + 0.55 * face) * tw;
+          const v = glow(Math.min(d1, d2), u * 0.0030) * (0.60 + 0.55 * face) * tw;
           if (v > 0.06) res = over(res, [clamp(v, 0, 1), 0]);
         }
       }
@@ -257,18 +257,17 @@
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     let res = 0;
     const half = cols / 2.12;
-    for (let k = 0; k < 8; k++) {
-      const p = (t * 0.7 + k / 8) % 1;
+    for (let k = 0; k < 10; k++) {
+      const p = (t * 0.7 + k / 10) % 1;
       const lx = (hash(k, 11) - 0.5) * 2 * half * 0.85 + S(t, 1, k * 0.7) * u * 0.05 + S(t, 3, k) * u * 0.02;
       const ly = -u * 0.10 + p * (u * 1.25);
       const rot = S(t, 2, k * 0.31) * 1.2 + k;
       if (Math.abs(X - lx) > u * 0.06 || Math.abs(Y - ly) > u * 0.06) continue;
       const ca = Math.cos(rot), sa = Math.sin(rot);
       const RX = (X - lx) * ca + (Y - ly) * sa, RY = -(X - lx) * sa + (Y - ly) * ca;
-      const L = u * 0.030;
-      const sdLeaf = (px, py) => sdVesica(px, py, 0, 0, L * 1.7, L * 1.0);
+      const sdLeaf = (px, py) => sdE(px, py, 0, 0, u * 0.013, u * 0.042); // thin ellipse leaf, long axis Y
       const sh = shade(sdLeaf, RX, RY, -0.5, -0.8);
-      if (sh > 0) res = over(res, [clamp(sh * 1.25, 0, 1) * (1 - ss(0.88, 1, p)), k % 2]);
+      if (sh > 0) res = over(res, [clamp(sh * 1.6, 0, 1) * (1 - ss(0.88, 1, p)), k % 2]);
     }
     const g = drift(X, Y, t, { gain: 0.12, thresh: 0.92, speed: 2 });
     if (g > 0) res = over(res, [g, 1]);

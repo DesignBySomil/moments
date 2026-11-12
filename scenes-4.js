@@ -60,8 +60,8 @@
     const inBell = bellD < 0 && dy < rimY;
     const inSkirt = dy >= rimY && dy < ry * 0.34 && Math.abs(dx) < rx * 0.92 * (1 - dy / (ry * 0.5));
     if (inBell || inSkirt) {
-      let v = 0.42 + 0.20 * ss(0, -ry, dy);              // brighter toward crown
-      v += 0.30 * glow(Math.abs(bellD), u * 0.006);       // luminous rim
+      let v = 0.55 + 0.22 * ss(0, -ry, dy);              // brighter toward crown
+      v += 0.45 * glow(Math.abs(bellD), u * 0.006);       // luminous rim
       v += 0.15 * glow(sdC(dx, dy, -rx * 0.3, -ry * 0.35, rx * 0.4), rx * 0.35); // off-center sheen
       if (inSkirt) v *= 0.55;
       // inner organs: four soft horseshoe dots in the lower dome
@@ -95,7 +95,7 @@
       }
     }
     return res;
-  });
+  }, { bloom: true });
 
   add('butterfly', '#150a20', ['#ffb3d9', '#c77ae8', '#f5f0ff'], 10, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
@@ -200,7 +200,7 @@
     const sdBoiler = (px, py) => sdE(px, py, 0, boilY, u * 0.19, boilR);
     const dB = sdBoiler(X, Y);
     if (dB < 1.2) {
-      let v = clamp(0.64 + 0.72 * (0.5 - (Y - boilY) / (boilR * 1.4)), 0.14, 1.2); // hot crown, dark belly
+      let v = clamp(0.70 + 0.72 * (0.5 - (Y - boilY) / (boilR * 1.4)), 0.16, 1.2); // hot crown, dark belly
       v += 0.30 * ss(u * 0.010, 0, Math.abs(Y - (boilY - boilR * 0.72)) * (dB < 0 ? 1 : 0)); // crown rim stripe
       if (v > 0.04 && dB < 0.9) res = over(res, [clamp(v, 0, 1), 1]);
     }
@@ -210,6 +210,10 @@
       let v = 0.30 + 0.55 * ss(0, -u * 0.012, dN) * ss(-0.9, 0.6, (Y - boilY) / boilR);
       res = over(res, [clamp(v, 0, 1), 1]);
     }
+    // headlamp: warm lamp at the nose with glow
+    const dHL = sdC(X, Y, noseX + u * 0.004, boilY - boilR * 0.55, u * 0.012);
+    if (dHL < 0) res = over(res, [1.1, 0]);
+    res = over(res, [clamp(glow(dHL, u * 0.020) * 0.5, 0, 1), 0]);
     // boiler bands
     for (const bxv of [-u * 0.085, 0, u * 0.085]) {
       if (Math.abs(X - bxv) < u * 0.0035 && dB < 0 && (Y - boilY) < boilR * 0.55) res = over(res, [0.72, 0]);

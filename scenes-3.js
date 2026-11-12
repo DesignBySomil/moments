@@ -23,7 +23,7 @@
         return Math.max(e(ax, ay, bx, by), e(bx, by, cx, cy), e(cx, cy, ax, ay)) / (u * 0.3);
       };
       const sh = shade(sdHouse, X, Y, -0.4, -0.85);
-      if (sh > 0) res = over(res, [clamp(sh * 0.62, 0, 1), 0]);
+      if (sh > 0) res = over(res, [clamp(sh * 0.85, 0, 1), 0]);
       const winD = sdBox(X, Y, hx - hw * 0.4, (ht + hb) / 2, u * 0.022, u * 0.022);
       if (winD < 0) res = over(res, [1.0, 2]);
       const w2 = sdBox(X, Y, hx + hw * 0.4, (ht + hb) / 2, u * 0.022, u * 0.022);
@@ -134,10 +134,10 @@
     const cl = fbm(X * 0.10 + t * 1.2, Y * 0.20, 4);
     if (cl > 0.56 && Y > u * 0.5) res = [ss(0.56, 0.80, cl) * 0.5, 0];
     if (Math.abs(X - bx) < u * 0.40 && Math.abs(Y - by) < u * 0.46) {
-      const rx = u * 0.150, ry = u * 0.220;
+      const rx = u * 0.135, ry = u * 0.235;
       const sdBal = (px, py) => {
         const ey = clamp((py - by) / ry, -1, 1);
-        const widen = ey < 0 ? 1 + 0.16 * -ey : 1 - 0.36 * ey;
+        const widen = ey < 0 ? 1 + 0.18 * -ey : 1 - 0.42 * ey;
         let d = sdE(px, py, bx, by, rx * widen, ry);
         d = Math.min(d, sdBox(px, py, bx, by + ry + u * 0.065, u * 0.038, u * 0.026));
         d = Math.min(d, sdSeg(px, py, bx - rx * 0.55, by + ry * 0.75, bx - u * 0.030, by + ry + u * 0.045) - u * 0.004);

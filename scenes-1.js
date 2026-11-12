@@ -205,9 +205,9 @@
       const dR = sdRing(X, Y);
       if (dR < 0.8) {
         const sh = shade(sdRing, X, Y, -0.45, -0.8);
-        if (sh > 0) res = over(res, [clamp(sh * 1.7, 0, 1), 1]);
+        if (sh > 0) res = over(res, [clamp(sh * 1.1, 0, 1), 0]);
       }
-      if (sdC(X, Y, wx, wy, u * 0.011) < 0.5) res = over(res, [0.9, 1]);
+      if (sdC(X, Y, wx, wy, u * 0.011) < 0.5) res = over(res, [0.9, 0]);
       for (let s = 0; s < 8; s++) {
         const a = t * 6 + s * Math.PI / 4;
         const dS = sdSeg(X, Y, wx, wy, wx + Math.cos(a) * r * 0.92, wy + Math.sin(a) * r * 0.92) - u * 0.0016;
