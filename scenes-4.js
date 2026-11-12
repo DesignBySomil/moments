@@ -8,29 +8,38 @@
     return Math.max(e(ax, ay, bx, by), e(bx, by, cx, cy), e(cx, cy, ax, ay)) / nrm;
   };
 
-  add('waves', '#071f38', ['#bfe0ff', '#4a7fb8'], 12, (x, y, t, cols, rows) => {
+  add('waves', '#050f1e', ['#cfe8ff', '#3d6ca8'], 12, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     let res = 0;
-    if (Y < u * 0.14) {
-      const s = drift(X, Y, t, { gain: 0.14, thresh: 0.93, speed: 0.8 });
+    if (Y < u * 0.16) {
+      const s = drift(X, Y, t, { gain: 0.16, thresh: 0.92, speed: 0.8 });
       if (s > 0) res = [s, 1];
     }
-    // rolling swell: bright continuous crest lines, dim faces, near-black troughs
-    for (let L = 0; L < 3; L++) {
-      const baseY = u * (0.34 + L * 0.19);
-      const k1 = 0.030 + L * 0.010, sp = 1.0 + L * 0.3, ph = L * 2.1;
-      const w1 = S(t, sp, ph + X * k1);
-      const w2 = S(t, 2.1, ph * 1.7 + X * 0.11);
-      const yl = baseY + u * (0.034 + L * 0.008) * w1 + u * 0.009 * w2;
+    // ocean swell in perspective: longer, taller, brighter bands toward the viewer
+    for (let L = 0; L < 4; L++) {
+      const baseY = u * (0.30 + L * 0.115 + L * L * 0.028);
+      if (baseY > u * 0.98) continue;
+      const k = 0.052 - L * 0.011;
+      const amp = u * (0.012 + L * 0.009);
+      const sp = 0.55 + L * 0.18, ph = L * 1.7;
+      const p = ph + X * k;
+      const w1 = S(t, sp, p);
+      const w2 = S(t, sp * 2.3, p * 1.9 + 0.6);
+      const asym = Math.sign(w1) * Math.pow(Math.abs(w1), 1.6);  // peaked crests, broad troughs
+      const yl = baseY + amp * (asym * 0.8 + 0.2 * w2 * (0.4 + L * 0.2));
       const d = Y - yl;
-      if (d < -u * 0.012 || d > u * 0.15) continue;
-      const line = glow(Math.abs(d + u * 0.002), u * 0.0055);
-      const face = ss(u * 0.13, u * 0.004, d) * (0.30 - L * 0.05);
-      const peak = ss(0.55, 0.95, w1);
-      const foamTex = vnoise(X * 1.5, Y * 1.5 + t * 5 + L * 7);
-      const foam = (d < u * 0.01 && d > -u * 0.012) ? peak * ss(0.42, 0.7, foamTex) * 0.6 : 0;
-      const v = Math.max(line * (0.95 - L * 0.12), face) + foam;
-      const ink = (line > 0.45 || foam > 0.25) ? 0 : 1;
+      const depth = u * (0.06 + L * 0.045);
+      if (d < -u * 0.012 || d > depth) continue;
+      const bright = 0.38 + L * 0.21;
+      const lineCore = glow(Math.abs(d + u * 0.0015), u * 0.0028);
+      const lineHalo = glow(Math.abs(d + u * 0.0015), u * 0.011) * 0.35;
+      const face = ss(depth, u * 0.004, d) * (0.10 + L * 0.09);
+      const peak = ss(0.35, 0.9, w1);
+      const foamTex = vnoise(X * 1.3, Y * 1.6 + t * 4 + L * 7);
+      const foam = (L >= 2 && d < u * 0.008 && d > -u * 0.012) ? peak * ss(0.40, 0.68, foamTex) * 0.75 : 0;
+      const line = (lineCore + lineHalo) * bright;
+      const v = Math.max(line, face) + foam;
+      const ink = (lineCore * bright > 0.5 || foam > 0.3) ? 0 : 1;
       if (v > 0.03 && (!res || v > res[0])) res = [clamp(v, 0, 1), ink];
     }
     return res;

@@ -95,42 +95,45 @@
           sdSeg(X, Y, bx, by - u * 0.003, bx + u * 0.013, by + u * 0.004) < 0.7)
         return [0.5, 1];
     }
-    // hero gull: soaring toward the viewer, slightly banked, kinked gull wings
-    const bank = S(t, 1.3) * 0.12;
-    const flap = S(t, 4);
-    const bcx = S(t, 1) * u * 0.04, bcy = u * 0.40 + S(t, 2, 0.7) * u * 0.018;
+    // hero gull: soaring in a shallow-V glide, wide kinked wings, luminous
+    const flap = 0.10 * S(t, 3);                       // gentle, the V never collapses
+    const bank = 0.10 * S(t, 1.5, 0.3);
+    const bcx = u * 0.02 + S(t, 1) * u * 0.04, bcy = u * 0.40 + S(t, 2, 0.7) * u * 0.018;
     const cb = Math.cos(bank), sb = Math.sin(bank);
-    const PX = (X - bcx) * cb + (Y - bcy) * sb;
-    const PY = -(X - bcx) * sb + (Y - bcy) * cb;
+    const RX = X - bcx, RY = Y - bcy;
+    const PX = RX * cb + RY * sb, PY = -RX * sb + RY * cb;
     let res = 0;
-    if (Math.abs(PX) < u * 0.18 && Math.abs(PY) < u * 0.16) {
-      const dih = 0.42 + flap * 0.50;
-      const L1 = u * 0.055, L2 = u * 0.062;
+    if (Math.abs(PX) < u * 0.24 && Math.abs(PY) < u * 0.18) {
+      const L1 = u * 0.075, L2 = u * 0.075;
       for (let s = -1; s <= 1; s += 2) {
-        const shx = s * u * 0.010, shy = -u * 0.006;
-        const a1 = dih, a2 = dih * 0.45;
+        const shx = s * u * 0.010, shy = 0;
+        const a1 = 0.47 + flap, a2 = -0.16 + flap * 0.6;   // shallow V, tips droop slightly
         const ex = shx + s * Math.cos(a1) * L1, ey = shy - Math.sin(a1) * L1;
-        const tx2 = ex + s * Math.cos(a2) * L2, ty2 = ey - Math.sin(a2) * L2;
-        // tapered quad per panel: wide at shoulder, pointed at elbow/tip
-        const d1 = Math.min(
-          sdTri(PX, PY, shx, shy - u * 0.015, shx, shy + u * 0.015, ex, ey + u * 0.004),
-          sdTri(PX, PY, shx, shy - u * 0.015, ex, ey + u * 0.004, ex, ey - u * 0.007));
-        const d2 = sdTri(PX, PY, ex, ey - u * 0.007, ex, ey + u * 0.006, tx2, ty2);
-        const dW = Math.min(d1, d2);
-        if (dW < 0.9) {
-          const span = clamp((Math.abs(PX) - u * 0.010) / (L1 + L2), 0, 1);
-          const v = glow(dW, u * 0.0025) * (1.0 - 0.30 * span);
-          if (v > 0.06) res = over(res, [clamp(v, 0, 1), 0]);
+        const tx = ex + s * Math.cos(a2) * L2, ty = ey - Math.sin(a2) * L2;
+        const dW = Math.min(sdSeg(PX, PY, shx, shy, ex, ey) - u * 0.0085,
+                            sdSeg(PX, PY, ex, ey, tx, ty) - u * 0.0022);
+        if (dW < u * 0.025) {
+          const span = clamp(Math.hypot(PX - shx, PY - shy) / (L1 + L2), 0, 1);
+          const rim = 0.5 * glow(Math.abs(dW), u * 0.002);
+          const v = glow(dW, u * 0.003) * (1.0 - 0.35 * span) + rim * 0.35;
+          if (v > 0.05) res = over(res, [clamp(v, 0, 1), 0]);
         }
       }
-      // body + head, viewed head-on
-      const dBo = Math.min(
-        sdE(PX, PY, 0, u * 0.006, u * 0.013, u * 0.024),
-        sdC(PX, PY, 0, -u * 0.024, u * 0.011));
-      if (dBo < 0.9) { const v = glow(dBo, u * 0.0025); if (v > 0.06) res = over(res, [clamp(v, 0, 1), 0]); }
-      // tail fan
-      const dT = sdTri(PX, PY, -u * 0.011, u * 0.026, u * 0.011, u * 0.026, 0, u * 0.048);
-      if (dT < 0.9) { const v = glow(dT, u * 0.002) * 0.85; if (v > 0.06) res = over(res, [clamp(v, 0, 1), 0]); }
+      // body: compact teardrop, head bump, small tail fan
+      const dBody = sdE(PX, PY, 0, u * 0.010, u * 0.0115, u * 0.024);
+      const dHead = sdC(PX, PY, 0, -u * 0.017, u * 0.0085);
+      const dTail = sdTri(PX, PY, -u * 0.009, u * 0.028, u * 0.009, u * 0.028, 0, u * 0.044);
+      const dCore = Math.min(dBody, dHead, dTail);
+      if (dCore < u * 0.02) {
+        const lit = 0.78 + 0.22 * ss(u * 0.010, -u * 0.010, PY);
+        const v = glow(dCore, u * 0.0035) * lit;
+        if (v > 0.05) res = over(res, [clamp(v, 0, 1), 0]);
+      }
+      const dAll = Math.min(dCore, Math.min(
+        sdSeg(PX, PY, -u * 0.010, 0, -u * 0.075, -u * 0.030) - u * 0.008,
+        sdSeg(PX, PY, u * 0.010, 0, u * 0.075, -u * 0.030) - u * 0.008));
+      const halo = glow(Math.max(dAll, 0), u * 0.022) * 0.15;
+      if (dAll > 0 && halo > 0.03) res = over(res, [halo, 0]);
     }
     return res;
   });
