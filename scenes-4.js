@@ -181,7 +181,7 @@
     return res;
   }, { bloom: true });
 
-  add('train', '#141412', ['#ffd9a0', '#8f8a80'], 10, (x, y, t, cols, rows) => {
+  add('train', '#0d0d0b', ['#ffd9a0', '#8f8a80'], 10, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     let res = 0;
     const gy = u * 0.80;
@@ -200,7 +200,7 @@
     const sdBoiler = (px, py) => sdE(px, py, 0, boilY, u * 0.19, boilR);
     const dB = sdBoiler(X, Y);
     if (dB < 1.2) {
-      let v = clamp(0.70 + 0.72 * (0.5 - (Y - boilY) / (boilR * 1.4)), 0.16, 1.2); // hot crown, dark belly
+      let v = clamp(0.82 + 0.80 * (0.5 - (Y - boilY) / (boilR * 1.4)), 0.16, 1.45); // hot crown, dark belly
       v += 0.30 * ss(u * 0.010, 0, Math.abs(Y - (boilY - boilR * 0.72)) * (dB < 0 ? 1 : 0)); // crown rim stripe
       if (v > 0.04 && dB < 0.9) res = over(res, [clamp(v, 0, 1), 1]);
     }
@@ -225,7 +225,7 @@
     const sdCab = (px, py) => sdBox(px, py, cabX, cabY, u * 0.064, u * 0.088) - u * 0.008;
     const dC = sdCab(X, Y);
     if (dC < 0.9) {
-      let v = clamp(0.72 - 0.55 * ss(cabY - u * 0.08, cabY + u * 0.09, Y), 0.18, 1);
+      let v = clamp(0.82 - 0.55 * ss(cabY - u * 0.08, cabY + u * 0.09, Y), 0.18, 1);
       v += 0.25 * ss(u * 0.008, 0, Math.abs(X - (cabX + u * 0.060)));
       res = over(res, [clamp(v, 0, 1), 1]);
     }
@@ -244,7 +244,7 @@
       const dW = sdC(X, Y, wx, wY + (wr === u * 0.030 ? u * 0.018 : 0), wr);
       if (dW < 0.9) {
         const sh = shade((qx, qy) => sdC(qx, qy, wx, wY + (wr === u * 0.030 ? u * 0.018 : 0), wr), X, Y, -0.4, -0.8);
-        if (sh > 0) res = over(res, [clamp(sh * 0.95 + 0.08, 0, 1), 1]);
+        if (sh > 0) res = over(res, [clamp(sh * 1.1 + 0.08, 0, 1), 1]);
       }
       if (sdC(X, Y, wx, wY + (wr === u * 0.030 ? u * 0.018 : 0), wr * 0.28) < 0.5) res = over(res, [0.7, 0]);
       if (wr === u * 0.046) {
