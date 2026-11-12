@@ -15,7 +15,7 @@
     const gbx = px0 + Math.sin(ang * 0.55) * L, gby = py0 + Math.cos(ang * 0.55) * L;
     if (sdC(X, Y, gbx, gby, u * 0.075) < 0) res = over(res, [0.18, 0]);
     const g1x = px0 + Math.sin(0.26) * L, g1y = py0 + Math.cos(0.26) * L, g2x = px0 - Math.sin(0.26) * L;
-    if (sdC(X, Y, g1x, g1y, u * 0.045) < 0 || sdC(X, Y, g2x, g1y, u * 0.045) < 0) res = over(res, [0.10, 1]);
+    if (sdC(X, Y, g1x, g1y, u * 0.05) < 0 || sdC(X, Y, g2x, g1y, u * 0.05) < 0) res = over(res, [0.22, 1]);
     const dBr = sdBox(X, Y, px0, py0 - u * 0.016, u * 0.055, u * 0.016);
     if (dBr < 0.8) {
       const m = ss(0.8, -0.5, dBr);

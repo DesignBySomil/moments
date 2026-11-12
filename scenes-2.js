@@ -88,29 +88,29 @@
     }
     // flame: 3 nested teardrop layers, independent sway, hot core
     const layers = [
-      [u * 0.170, u * 0.50, 0.30, 2.1],
-      [u * 0.120, u * 0.40, 0.55, 4.7],
-      [u * 0.065, u * 0.27, 1.00, 8.3]];
+      [u * 0.190, u * 0.42, 0.30, 2.1],
+      [u * 0.130, u * 0.34, 0.55, 4.7],
+      [u * 0.070, u * 0.23, 1.00, 8.3]];
     if (Y < base + 2 && Y > base - u * 0.55 && Math.abs(X) < u * 0.38) {
       for (let i = 0; i < 3; i++) {
         const [w, h, bright, ph] = layers[i];
         const ty = (base - Y) / h;
         if (ty <= 0 || ty >= 1) continue;
         const sway = S(t, 2.6 + i * 0.7, ph) * (0.10 + ty * 0.38) * w + S(t, 6 + i, ph * 1.7) * ty * w * 0.22;
-        const wshape = w * Math.sin(Math.PI * Math.pow(ty, 0.72));
+        const wshape = w * Math.sin(Math.PI * Math.pow(ty, 0.72)) * (0.82 + 0.36 * fbm(X * 0.9 + i * 5, ty * 3 - t * (5 + i * 2), 2));
         const d = Math.abs(X - sway) / Math.max(wshape, 0.001);
         const v = (1 - d * d) * bright * (0.86 + 0.14 * S(t, 5.2, ph));
         if (v > 0.10) res = over(res, [clamp(v, 0, 1), 0]);
       }
       for (let k = 0; k < 2; k++) {
         const dir = k === 0 ? -1 : 1;
-        const ty = (base - Y) / (u * 0.24);
+        const ty = (base - Y) / (u * 0.28);
         if (ty <= 0 || ty >= 1) continue;
         const sway = S(t, 3.4, k * 5.1) * ty * u * 0.03;
         const cx = dir * u * 0.125 + sway;
         const wshape = u * 0.032 * Math.sin(Math.PI * ty);
         const d = Math.abs(X - cx) / Math.max(wshape, 0.001);
-        const v = (1 - d * d) * 0.3 * (0.7 + 0.3 * S(t, 4.4, k * 3.3));
+        const v = (1 - d * d) * 0.45 * (0.7 + 0.3 * S(t, 4.4, k * 3.3));
         if (v > 0.12) res = over(res, [clamp(v, 0, 1), 0]);
       }
     }
