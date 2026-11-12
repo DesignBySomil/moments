@@ -125,7 +125,7 @@
     return res;
   });
 
-  add('moonsea', '#0b1233', ['#e8ecff', '#5f74c9'], 16, (x, y, t, cols, rows) => {
+  add('moonsea', '#070b24', ['#e8ecff', '#5f74c9'], 16, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     let res = 0;
     const horizon = u * 0.62;
@@ -138,9 +138,10 @@
       let v;
       if (dM <= 0) {
         const maria = ss(0.55, 0.80, fbm(X * 0.055 + 7.3, Y * 0.055 + 2.1, 3)) * 0.22;
-        v = clamp(0.92 - maria + 0.08 * ss(0, 0.4, -dM / R), 0, 1);
+        const rr = clamp(-dM / R, 0, 1);
+        v = clamp(0.55 + 0.45 * rr - maria + 0.05 * ss(0, 0.4, rr), 0, 1);
       } else {
-        v = glow(dM, u * 0.006) * 0.5;
+        v = glow(dM, u * 0.009) * 0.6;
       }
       if (v > 0.05) res = over(res, [clamp(v, 0, 1), 0]);
     }
@@ -152,8 +153,8 @@
       const depth = clamp((Y - horizon) / (u - horizon), 0, 1);
       const spread = u * (0.018 + depth * 0.085);
       const colm = Math.exp(-(X * X) / (2 * spread * spread));
-      const streak = ss(0.35, 0.75, vnoise(X * 1.6, Y * 0.30 - t * 1.8));
-      const v = colm * (0.25 + 0.75 * streak) * (1 - depth * 0.5) * 0.75;
+      const streak = ss(0.30, 0.70, vnoise(X * 1.6, Y * 0.30 - t * 1.8));
+      const v = colm * (0.30 + 0.70 * streak) * (1 - depth * 0.5) * 1.05;
       if (v > 0.05) res = over(res, [clamp(v, 0, 1), 1]);
     }
     return res;
@@ -252,7 +253,7 @@
     return res;
   });
 
-  add('leaves', '#1a1208', ['#e8b34a', '#a8763a'], 14, (x, y, t, cols, rows) => {
+  add('leaves', '#120c05', ['#e8b34a', '#a8763a'], 14, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     let res = 0;
     const half = cols / 2.12;
@@ -267,7 +268,7 @@
       const L = u * 0.030;
       const sdLeaf = (px, py) => sdVesica(px, py, 0, 0, L * 1.7, L * 1.0);
       const sh = shade(sdLeaf, RX, RY, -0.5, -0.8);
-      if (sh > 0) res = over(res, [sh * (1 - ss(0.88, 1, p)), k % 2]);
+      if (sh > 0) res = over(res, [clamp(sh * 1.25, 0, 1) * (1 - ss(0.88, 1, p)), k % 2]);
     }
     const g = drift(X, Y, t, { gain: 0.12, thresh: 0.92, speed: 2 });
     if (g > 0) res = over(res, [g, 1]);

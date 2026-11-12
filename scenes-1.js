@@ -138,7 +138,7 @@
     return res;
   });
 
-  add('wave', '#12303f', ['#ffe1b3', '#7fa8b8'], 10, (x, y, t, cols, rows) => {
+  add('wave', '#0a1a26', ['#ffe1b3', '#7fa8b8'], 10, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y;
     const a = S(t, 2) * 0.20, wy = rows * 0.74;
     const ca = Math.cos(a), sa = Math.sin(a);
@@ -157,7 +157,9 @@
       return d;
     };
     const sh = shade(sdHand, LX, LY, -0.55, -0.75);
-    if (sh > 0) return [sh, 0];
+    if (sh > 0) return [clamp(sh * 1.3, 0, 1), 0];
+    const dH = sdHand(LX, LY);
+    if (dH < u * 0.012) return [glow(dH, u * 0.006) * 0.4, 0];
     const ph = (t * 2) % 1, ringR = u * (0.26 + 0.13 * ph);
     const rd = Math.abs(sdC(LX, LY, -u * 0.02, -u * 0.24, ringR));
     if (rd < u * 0.008) return [0.20 * (1 - ph), 1];

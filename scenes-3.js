@@ -60,10 +60,10 @@
       const dot = (rx * bdx + ry * bdy) / rdist;
       for (const sgn of [1, -0.35]) {
         const dd = sgn > 0 ? dot : -dot;
-        if (dd > 0.90) {
+        if (dd > 0.88) {
           const edgeFade = clamp((28.3 - Math.abs(X)) / 5.7, 0, 1);
-          const v = ss(0.90, 0.995, dd) * glow(rdist, u * 0.30) * (sgn > 0 ? 1.0 : 0.35) * edgeFade;
-          if (v > 0.04) res = over(res, [clamp(v * 1.4, 0, 1), 0, 0.92]);
+          const v = ss(0.88, 0.995, dd) * glow(rdist, u * 0.30) * (sgn > 0 ? 1.0 : 0.35) * edgeFade;
+          if (v > 0.04) res = over(res, [clamp(v * 1.6, 0, 1), 0, 0.92]);
         }
       }
     }
@@ -82,8 +82,10 @@
         return Math.max(e(ax, ay, bx, by), e(bx, by, cx, cy), e(cx, cy, ax, ay)) / (u * 0.2);
       };
       const sh = shade(sdTower, X, Y, -0.6, -0.7);
-      if (sh > 0) res = over(res, [sh, 0]);
+      if (sh > 0) res = over(res, [clamp(sh * 1.2, 0, 1), 0]);
       if (sdE(X, Y, lx, lampY - u * 0.018, u * 0.020, u * 0.020) < 0) res = over(res, [1, 0]);
+      const dLG = sdC(X, Y, lx, lampY - u * 0.018, 0);
+      res = over(res, [glow(dLG, u * 0.022) * 0.55, 0]);
     }
     if (Y > baseY - 2) {
       const wv = waveField(X, Y, baseY + u * 0.01, t, { gain: 0.5, amp: u * 0.008, freq: 0.06, deep: u * 0.12 });
@@ -129,7 +131,9 @@
     if (Math.abs(X - bx) < u * 0.40 && Math.abs(Y - by) < u * 0.46) {
       const rx = u * 0.165, ry = u * 0.20;
       const sdBal = (px, py) => {
-        let d = sdE(px, py, bx, by, rx, ry);
+        const ey = clamp((py - by) / ry, -1, 1);
+        const widen = ey < 0 ? 1 + 0.12 * -ey : 1 - 0.28 * ey;
+        let d = sdE(px, py, bx, by, rx * widen, ry);
         d = Math.min(d, sdBox(px, py, bx, by + ry + u * 0.065, u * 0.038, u * 0.026));
         d = Math.min(d, sdSeg(px, py, bx - rx * 0.55, by + ry * 0.75, bx - u * 0.030, by + ry + u * 0.045) - u * 0.004);
         d = Math.min(d, sdSeg(px, py, bx + rx * 0.55, by + ry * 0.75, bx + u * 0.030, by + ry + u * 0.045) - u * 0.004);
@@ -138,18 +142,18 @@
       const dE = sdE(X, Y, bx, by, rx, ry);
       const sh = shade(sdBal, X, Y, -0.55, -0.75);
       if (sh > 0) {
-        let ink = 0, v = sh;
+        let ink = 0, v = clamp(sh * 1.15, 0, 1);
         if (dE < 0) {
           // strong directional contrast + specular hot spot + alternating gore panels
           const q = ((X - bx) * 0.66 + (Y - by) * 0.75) / rx;
-          v *= clamp(1.05 - 0.50 * ss(-0.9, 1.0, q), 0.55, 1.05);
+          v *= clamp(1.10 - 0.42 * ss(-0.9, 1.0, q), 0.62, 1.10);
           v += 0.55 * glow(sdE(X, Y, bx - rx * 0.38, by - ry * 0.38, rx * 0.26, ry * 0.20), u * 0.018);
           const bandA = Math.atan2((X - bx) * (ry / rx), (Y - by));
-          if (Math.sin(bandA * 4) > 0) { ink = 1; v *= 0.80; }
+          if (Math.sin(bandA * 4) > 0) { ink = 1; v *= 0.88; }
         } else {
           // basket and rigging below the envelope: darker red, woven
           ink = 1;
-          v *= 0.70 * (0.85 + 0.15 * Math.sin(X * 2.4) * Math.sin(Y * 2.4));
+          v *= 0.75 * (0.85 + 0.15 * Math.sin(X * 2.4) * Math.sin(Y * 2.4));
         }
         res = over(res, [clamp(v, 0, 1), ink]);
       }

@@ -98,8 +98,8 @@
         const bandY = u * (0.16 + L * 0.13) + warp * (0.5 + L * 0.3);
         const rays = fbm(X * (0.35 + L * 0.12) + t * (0.8 + L * 0.3), Y * 0.02 + L * 9, 3);
         const fall = ss(u * 0.75, u * 0.10, Math.abs(Y - bandY));
-        const v = fall * ss(0.42, 0.75, rays) * (0.65 - L * 0.12);
-        if (v > 0.04) res = over(res, [clamp(v * 1.3, 0, 1), L === 1 ? 1 : 0]);
+        const v = fall * ss(0.42, 0.75, rays) * (0.80 - L * 0.13);
+        if (v > 0.04) res = over(res, [clamp(v * 1.45, 0, 1), L === 1 ? 1 : 0]);
       }
     }
     const ridgeY = u * 0.76 + fbm(X * 0.06, 3.3, 3) * u * 0.10;
@@ -124,7 +124,7 @@
       };
       const sh = shade(sdUmbr, X, Y, -0.55, -0.75);
       if (sh > 0) {
-        let v = sh;
+        let v = clamp(sh * 1.2, 0, 1);
         const canopy = sdE(X, Y, ux, uy + R * 0.25, R, R * 0.62) < 0 && Y < uy;
         if (canopy) {
           const ribA = Math.atan2(-(Y - uy), (X - ux));

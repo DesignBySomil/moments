@@ -97,7 +97,7 @@
     return res;
   });
 
-  add('butterfly', '#241436', ['#ffb3d9', '#c77ae8', '#f5f0ff'], 10, (x, y, t, cols, rows) => {
+  add('butterfly', '#150a20', ['#ffb3d9', '#c77ae8', '#f5f0ff'], 10, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     let res = 0;
     const motes = drift(X, Y, t, { gain: 0.22, thresh: 0.90, speed: 0.8, twinkle: 2 });
@@ -120,10 +120,11 @@
         const [ox, oy, wrx, wry, ang] = specs[i];
         const dW = rotEll(X, Y, cx + ox, cy + oy, ang, wrx, wry);
         if (dW < 0.8) {
-          const inner = ss(-u * 0.010, -u * 0.002, dW);
-          let v = glow(dW, u * 0.004) * (0.55 + 0.45 * inner);
-          let ink = inner > 0.5 ? 0 : 1;
-          if (i === 0 && inner > 0.5) {
+          const rim = ss(-u * 0.006, u * 0.001, dW);
+          let v = glow(dW, u * 0.006) * (1 - 0.28 * rim);
+          let ink = rim > 0.5 ? 1 : 0;
+          if (dW < 0) v += 0.30 * glow(sdC(X, Y, cx + ox * 0.35, cy + oy * 0.35, 0), u * 0.030);
+          if (i === 0 && dW < 0) {
             const spotD = Math.min(
               sdC(X, Y, cx + ox + s * wrx * 0.45, cy + oy - wry * 0.35, u * 0.006),
               sdC(X, Y, cx + ox + s * wrx * 0.62, cy + oy + wry * 0.05, u * 0.005));
