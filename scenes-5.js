@@ -131,28 +131,42 @@
   });
 
   add('swing', '#142030', ['#e8e0cc', '#7a94b0'], 12, (x, y, t, cols, rows) => {
-    const bk = getBake('swing');
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     let res = 0;
     const st = drift(X, Y, t, { scale: 0.5, thresh: 0.93, gain: 0.35, speed: 0.4, twinkle: 2 });
     if (st > 0) res = [st, 1];
-    if (bk) {
-      const fw = u * 0.30, fh = u * 0.32, cy = u * 0.50;
-      const dx = X, dy = Y - cy;
-      if (Math.abs(dx) <= fw * 1.08 && Math.abs(dy) <= fh) {
-        let sx = dx / (fw * 2) + 0.5, sy = dy / (fh * 2) + 0.5;
-        // sway: rotate sample around rope anchor (top of frame, where ropes leave)
-        const a = 0.04 * S(t, 1.1);
-        const ax = 0.77, ay = 0.0;
-        const rx = sx - ax, ry = sy - ay;
-        sx = ax + rx * Math.cos(a) + ry * Math.sin(a);
-        sy = ay - rx * Math.sin(a) + ry * Math.cos(a);
-        if (sx >= 0 && sx <= 1 && sy >= 0 && sy <= 1) {
-          const eg = ss(0, 0.06, sx) * ss(1, 0.94, sx) * ss(0, 0.04, sy) * ss(1, 0.96, sy);
-          const v0 = sampleBake(bk, sx * (bk.w - 1), sy * (bk.h - 1)) * eg;
-          if (v0 > 0.04) res = over(res, [clamp(v0 * 1.2, 0, 1), 0]);
-        }
+    const gy = u * 0.82, by = u * 0.20, W = u * 0.20;
+    if (Y > gy) res = over(res, [0.16 + 0.10 * fbm(X * 0.6, Y * 0.6, 2), 1]);
+    // frame: top bar + angled side legs, shaded capsules
+    const frameParts = [[-W, by, W, by], [-W, by, -W - u * 0.05, gy], [W, by, W + u * 0.05, gy]];
+    for (const [x0, y0, x1, y1] of frameParts) {
+      const sdF = (px, py) => sdSeg(px, py, x0, y0, x1, y1) - u * 0.008;
+      const dF = sdF(X, Y);
+      if (dF < 0.8) {
+        const sh = shade(sdF, X, Y, -0.45, -0.8);
+        if (sh > 0) res = over(res, [clamp(sh * 1.25, 0, 1), 1]);
       }
+    }
+    // pendulum swing
+    const a = 0.45 * S(t, 1);
+    const L = u * 0.42;
+    const sx = Math.sin(a) * L, sy = by + Math.cos(a) * L;
+    // moving ground shadow under the seat
+    if (Y > gy) {
+      const dsh = sdE(X, Y, Math.sin(a) * L * 0.9, gy + u * 0.02, u * 0.07, u * 0.012);
+      if (dsh < 0) res = over(res, [0.06, 1]);
+    }
+    // ropes: parallel, slightly spread at the seat
+    for (let s = -1; s <= 1; s += 2) {
+      const dR = sdSeg(X, Y, s * u * 0.006, by, sx + s * u * 0.052, sy) - u * 0.0032;
+      if (dR < 0.6) { const v = glow(dR, 0.6) * 0.78; if (v > 0.06) res = over(res, [v, 0]); }
+    }
+    // seat plank: rounded, shaded, warm
+    const sdSeat = (px, py) => sdBox(px, py, sx, sy, u * 0.058, u * 0.009) - u * 0.004;
+    const dS = sdSeat(X, Y);
+    if (dS < 0.8) {
+      const sh = shade(sdSeat, X, Y, -0.45, -0.85);
+      if (sh > 0) res = over(res, [clamp(sh * 1.3, 0, 1), 0]);
     }
     return res;
   });

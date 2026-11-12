@@ -216,13 +216,26 @@
       const v = ss(0.36, 0.78, cm) * (0.55 + flash) * ss(rows * 0.015, rows * 0.20 + ragged, Y);
       if (v > 0.03) res = [v, 1];
     }
-    const st = vnoise(X * 1.9, Y * 0.30 - t * 26);
-    const st2 = vnoise(X * 1.9 + 40, Y * 0.24 - t * 19);
-    if (st > 0.83 && Y > rows * 0.06) res = over(res, [ss(0.83, 0.94, st) * 0.9, 0, 0.9]);
+    const slant = Y * 0.12;
+    const st = vnoise((X + slant) * 1.9, Y * 0.30 - t * 26);
+    const st2 = vnoise((X + slant) * 1.9 + 40, Y * 0.24 - t * 19);
+    if (st > 0.82 && Y > rows * 0.06) res = over(res, [ss(0.82, 0.92, st), 0, 0.95]);
     else if (st2 > 0.85 && Y > rows * 0.06) res = over(res, [ss(0.85, 0.95, st2) * 0.42, 0, 0.8]);
     if (Y > rows * 0.90) {
       const rf = fbm(X * 0.3 + t * 6, Y * 0.8, 2);
       res = over(res, [0.20 + 0.24 * rf, 1]);
+    }
+    // splash rings where drops hit the wet ground
+    for (let k = 0; k < 6; k++) {
+      const p = (t * 2.2 + hash(k, 11)) % 1;
+      const sx = (hash(k, 13) - 0.5) * cols * 0.8;
+      const sy = rows * (0.905 + hash(k, 17) * 0.06);
+      const rr = 0.5 + p * rows * 0.022;
+      const d = Math.abs(Math.hypot((X - sx) * 1.4, (Y - sy) * 3.2) - rr);
+      if (d < 0.9) {
+        const v = (1 - p) * 0.75 * (1 - d / 0.9);
+        if (v > 0.06) res = over(res, [v, 0, 0.9]);
+      }
     }
     return res;
   });
