@@ -57,7 +57,8 @@
     const st = drift(X, Y, t, { scale: 0.5, thresh: 0.9, gain: 0.4, speed: 0.4 });
     if (st > 0) res = [st, 1];
     const beamA = TAU * t * 0.25;
-    const bdx = Math.cos(beamA), bdy = Math.sin(beamA) * 0.35 - 0.06;
+    const bl = Math.hypot(Math.cos(beamA), Math.sin(beamA) * 0.35 - 0.06);
+    const bdx = Math.cos(beamA) / bl, bdy = (Math.sin(beamA) * 0.35 - 0.06) / bl;
     const rx = X - lx, ry = Y - lampY;
     const rdist = Math.hypot(rx, ry);
     if (rdist > u * 0.04 && Y < u * 0.70) {
