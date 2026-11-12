@@ -99,10 +99,10 @@
     return res;
   }, { bloom: true });
 
-  add('lantern', '#191008', ['#ffca7a', '#a8763a'], 12, (x, y, t, cols, rows) => {
+  add('lantern', '#0d0803', ['#ffca7a', '#a8763a'], 12, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     const sway = S(t, 1) * 0.10, lx = S(t, 1) * u * 0.03, ly = u * 0.42;
-    const g = glow(sdC(X, Y, lx, ly, 0), u * 0.155) * 0.36 * (0.6 + 0.8 * fbm(X * 0.3, Y * 0.3, 2));
+    const g = glow(sdC(X, Y, lx, ly, 0), u * 0.155) * 0.26 * (0.6 + 0.8 * fbm(X * 0.3, Y * 0.3, 2));
     let res = g > 0.16 ? [g, 0, 0.9] : 0;
     if (Math.abs(X - lx) < u * 0.3 && Math.abs(Y - ly) < u * 0.35) {
       const rx = u * 0.135, ry = u * 0.16;
@@ -117,15 +117,21 @@
       const sh = shade(sdLant, X, Y, -0.5 + sway, -0.8);
       if (sh > 0) {
         const ribA = Math.atan2(Y - ly, (X - lx) * (ry / rx));
-        const rib = 0.78 + 0.22 * Math.abs(Math.sin(ribA * 7));
-        const body = sdE(X, Y, lx, ly, rx, ry) < 0 ? rib : 1;
-        res = over(res, [clamp(sh * body * 1.1, 0, 1), 0]);
+        const rib = 0.84 + 0.16 * Math.abs(Math.sin(ribA * 7));
+        const inBody = sdE(X, Y, lx, ly, rx, ry) < 0;
+        const body = inBody ? rib : 1;
+        let v = clamp(sh * body * 1.1, 0, 1);
+        if (inBody) {
+          const rq = Math.hypot((X - lx) / rx, (Y - ly) / ry);
+          v = clamp(v * (0.72 + 0.62 * Math.pow(1 - Math.min(rq, 1), 1.4)), 0, 1);
+        }
+        res = over(res, [v, 0]);
       }
     }
     const emb = drift(X, Y, t, { gain: 0.18, thresh: 0.91, speed: 2, windY: -1 });
     if (emb > 0) res = over(res, [emb, 1]);
     return res;
-  });
+  }, { bloom: true });
 
   add('balloon', '#0d1322', ['#ffd9c9', '#e85a4a'], 16, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;

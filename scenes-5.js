@@ -107,7 +107,7 @@
     const ridgeY = u * 0.76 + fbm(X * 0.06, 3.3, 3) * u * 0.10;
     if (Y > ridgeY) res = over(res, [0.28 + 0.12 * fbm(X * 0.5, Y * 0.5, 2), 1]);
     return res;
-  });
+  }, { bloom: true });
 
   add('umbrella', '#0a0f16', ['#e8d8b0', '#7a8aa0'], 10, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
@@ -153,7 +153,7 @@
     return res;
   });
 
-  add('swing', '#142030', ['#e8e0cc', '#7a94b0'], 12, (x, y, t, cols, rows) => {
+  add('swing', '#0a1220', ['#e8e0cc', '#7a94b0'], 12, (x, y, t, cols, rows) => {
     const X = (x - cols / 2) / 1.06, Y = y, u = rows;
     let res = 0;
     const st = drift(X, Y, t, { scale: 0.5, thresh: 0.93, gain: 0.35, speed: 0.4, twinkle: 2 });
@@ -183,7 +183,7 @@
       const dF = sdF(X, Y);
       if (dF < 1.0) {
         const sh = shade(sdF, X, Y, 0.5, -0.75);
-        if (sh > 0) res = over(res, [clamp(sh * 1.2 + 0.05, 0, 1), 1]);
+        if (sh > 0) res = over(res, [clamp(sh * 1.4 + 0.05, 0, 1), 1]);
       }
     }
     // pendulum
